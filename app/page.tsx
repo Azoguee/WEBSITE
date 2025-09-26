@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db'
 import { ProductCard } from '@/components/ProductCard'
-import { Product } from '@/types'
+import { Product, Category } from '@/types'
 import { Button } from '@/components/ui/button'
 import { MessageCircle, Star, Shield, Zap } from 'lucide-react'
 import Link from 'next/link'
@@ -142,7 +142,7 @@ export default async function HomePage() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {categories.map((category) => (
+            {categories.map((category: Category) => (
               <Link
                 key={category.id}
                 href={`/danh-muc/${category.slug}`}
