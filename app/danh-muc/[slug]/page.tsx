@@ -33,7 +33,12 @@ async function getProducts(
   const limit = 12
   const skip = (page - 1) * limit
 
-  const where: any = {
+  const where: {
+    categoryId: string
+    status: string
+    price?: { gte?: number; lte?: number }
+    OR?: Array<{ name?: { contains: string }; description?: { contains: string }; sku?: { contains: string } }>
+  } = {
     categoryId,
     status: 'active',
   }
@@ -52,7 +57,7 @@ async function getProducts(
     ]
   }
 
-  const orderBy: any = {}
+  const orderBy: { price?: 'asc' | 'desc'; name?: 'asc' | 'desc'; createdAt?: 'asc' | 'desc' } = {}
   switch (sort) {
     case 'price_asc':
       orderBy.price = 'asc'

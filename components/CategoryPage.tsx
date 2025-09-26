@@ -230,7 +230,7 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
               ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
               : 'grid-cols-1'
           }`}>
-            {products.map((product) => (
+            {products.map((product: Product) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -267,7 +267,7 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
                 Trước
               </Button>
               
-              {[...Array(pagination.pages)].map((_, i) => {
+              {[...Array(pagination.pages)].map((_: any, i: number) => {
                 const page = i + 1
                 const isCurrentPage = page === pagination.page
                 

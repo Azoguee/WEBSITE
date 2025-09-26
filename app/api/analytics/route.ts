@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    const where: any = {}
+    const where: { createdAt?: { gte: Date; lte: Date } } = {}
     if (startDate && endDate) {
       where.createdAt = {
         gte: new Date(startDate),
