@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/db'
+import { Category, Product } from '@/types'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.SITE_URL || 'http://localhost:3000'
@@ -38,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     select: { slug: true, updatedAt: true },
   })
 
-  const categoryPages = categories.map((category) => ({
+  const categoryPages = categories.map((category: { slug: string; updatedAt: Date }) => ({
     url: `${baseUrl}/danh-muc/${category.slug}`,
     lastModified: category.updatedAt,
     changeFrequency: 'weekly' as const,
@@ -51,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     select: { slug: true, updatedAt: true },
   })
 
-  const productPages = products.map((product) => ({
+  const productPages = products.map((product: { slug: string; updatedAt: Date }) => ({
     url: `${baseUrl}/san-pham/${product.slug}`,
     lastModified: product.updatedAt,
     changeFrequency: 'weekly' as const,
