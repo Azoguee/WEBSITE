@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db'
 import { ProductCard } from '@/components/ProductCard'
-import { ProductCard as ProductCardType } from '@/types'
+import { Product } from '@/types'
 import { Button } from '@/components/ui/button'
 import { MessageCircle, Star, Shield, Zap } from 'lucide-react'
 import Link from 'next/link'
@@ -39,7 +39,7 @@ export default async function HomePage() {
     getCategories(),
   ])
 
-  const handleBuyClick = (product: ProductCardType) => {
+  const handleBuyClick = (product: Product) => {
     // This will be handled by client-side JavaScript
     console.log('Buy clicked:', product)
   }
