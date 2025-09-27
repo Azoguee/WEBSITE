@@ -4,15 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:validate": "prisma validate",
+    "db:init": "tsx scripts/prisma-init.ts",
     "import:csv": "tsx scripts/import-csv.ts",
-    "setup": "npm install && npm run db:generate && npm run db:push && npm run db:seed"
+    "setup": "npm install && npm run db:generate && npm run db:push && npm run db:seed",
+    "vercel-build": "npm run db:init && next build"
   },
   "dependencies": {
     "next": "^14.0.0",

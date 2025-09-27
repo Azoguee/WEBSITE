@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "app/api/**": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

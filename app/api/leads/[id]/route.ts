@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+// Force Node.js runtime for Prisma compatibility
+export const runtime = 'nodejs'
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }

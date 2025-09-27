@@ -7,6 +7,17 @@ const nextConfig = {
     domains: ['localhost', 'your-domain.com'],
     formats: ['image/webp', 'image/avif'],
   },
+  // Ensure Prisma client is properly bundled
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('@prisma/client')
+    }
+    return config
+  },
+  // Environment variables for Prisma
+  env: {
+    DATABASE_URL: process.env.DATABASE_URL,
+  },
   async headers() {
     return [
       {

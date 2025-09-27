@@ -5,6 +5,9 @@ import { createLeadSchema, sanitizeString } from '@/lib/validation'
 import { rateLimit, getRateLimitHeaders } from '@/lib/rate-limit'
 import { Lead } from '@/types'
 
+// Force Node.js runtime for Prisma compatibility
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting

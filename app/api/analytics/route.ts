@@ -4,6 +4,9 @@ import { analyticsSchema, sanitizeString } from '@/lib/validation'
 import { rateLimit, getRateLimitHeaders } from '@/lib/rate-limit'
 import { requireAuth } from '@/lib/auth'
 
+// Force Node.js runtime for Prisma compatibility
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
