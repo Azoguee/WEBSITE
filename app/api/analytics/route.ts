@@ -1,10 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { analyticsSchema, sanitizeString } from '@/lib/validation'
+import { rateLimit, getRateLimitHeaders } from '@/lib/rate-limit'
+import { requireAuth } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientIp = request.headers.get('x-forwarded-for') || 
+                    request.headers.get('x-real-ip') || 
+                    'unknown'
+    
+    if (!rateLimit(clientIp, 10, 60000)) { // 10 requests per minute
+      return NextResponse.json(
+        { success: false, error: 'Rate limit exceeded' },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(clientIp, 10, 60000)
+        }
+      )
+    }
+
     const body = await request.json()
-    const { event, parameters } = body
+    
+    // Validate input
+    const validationResult = analyticsSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid input', details: validationResult.error.errors },
+        { status: 400 }
+      )
+    }
+
+    const { event, parameters } = validationResult.data
 
     // Log analytics event
     console.log('Analytics Event:', { event, parameters, timestamp: new Date() })
@@ -40,7 +68,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export const GET = requireAuth(async (request: NextRequest, user) => {
   try {
     const { searchParams } = new URL(request.url)
     const startDate = searchParams.get('startDate')
@@ -104,5 +132,5 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 

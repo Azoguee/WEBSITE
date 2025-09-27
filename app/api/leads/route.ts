@@ -1,11 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { generateOrderRef, getDeviceType, buildZaloLink } from '@/lib/utils'
+import { createLeadSchema, sanitizeString } from '@/lib/validation'
+import { rateLimit, getRateLimitHeaders } from '@/lib/rate-limit'
 import { Lead } from '@/types'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientIp = request.headers.get('x-forwarded-for') || 
+                    request.headers.get('x-real-ip') || 
+                    'unknown'
+    
+    if (!rateLimit(clientIp, 5, 60000)) { // 5 requests per minute
+      return NextResponse.json(
+        { success: false, error: 'Rate limit exceeded' },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(clientIp, 5, 60000)
+        }
+      )
+    }
+
     const body = await request.json()
+    
+    // Validate input
+    const validationResult = createLeadSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid input', details: validationResult.error.errors },
+        { status: 400 }
+      )
+    }
+
     const {
       productId,
       productName,
@@ -18,14 +45,15 @@ export async function POST(request: NextRequest) {
       utmSource,
       utmCampaign,
       utmMedium,
-    } = body
+    } = validationResult.data
 
     // Get client info
-    const clientIp = request.headers.get('x-forwarded-for') || 
-                    request.headers.get('x-real-ip') || 
-                    'unknown'
     const userAgent = request.headers.get('user-agent') || 'unknown'
     const deviceType = getDeviceType(userAgent)
+
+    // Sanitize inputs
+    const sanitizedProductName = sanitizeString(productName)
+    const sanitizedVariant = variant ? sanitizeString(variant) : undefined
 
     // Generate order reference
     const orderRef = generateOrderRef()
@@ -35,9 +63,9 @@ export async function POST(request: NextRequest) {
       data: {
         orderRef,
         productId,
-        productName,
-        price: parseFloat(price),
-        variant,
+        productName: sanitizedProductName,
+        price: parseFloat(price.toString()),
+        variant: sanitizedVariant,
         quantity,
         sessionId,
         clientIp,
@@ -55,10 +83,10 @@ export async function POST(request: NextRequest) {
     // Build Zalo link
     const zaloOaLink = process.env.ZALO_OA_LINK || 'https://zalo.me/your-zalo-oa'
     const zaloLink = buildZaloLink({
-      productName,
+      productName: sanitizedProductName,
       sku: productId || 'N/A',
       price: `${price} VND`,
-      variant,
+      variant: sanitizedVariant,
       sourcePage: landingUrl || 'Unknown',
       orderRef,
       zaloOaLink,

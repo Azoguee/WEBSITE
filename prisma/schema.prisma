@@ -23,6 +23,8 @@ model Category {
 
   products Product[]
 
+  @@index([isActive, sortOrder])
+  @@index([slug])
   @@map("categories")
 }
 
@@ -49,6 +51,11 @@ model Product {
   variants ProductVariant[]
   leads    Lead[]
 
+  @@index([categoryId, status])
+  @@index([isFeatured, status])
+  @@index([price])
+  @@index([slug])
+  @@index([status, sortOrder])
   @@map("products")
 }
 
@@ -89,6 +96,10 @@ model Lead {
 
   product Product? @relation(fields: [productId], references: [id])
 
+  @@index([status, createdAt])
+  @@index([productId])
+  @@index([createdAt])
+  @@index([clientIp])
   @@map("leads")
 }
 
