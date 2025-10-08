@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from "clsx"
+import { v4 as uuidv4 } from 'uuid'
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
@@ -12,9 +13,8 @@ export function formatPrice(price: number, currency: string = 'VND'): string {
 }
 
 export function generateOrderRef(): string {
-  const timestamp = Date.now().toString(36)
-  const random = Math.random().toString(36).substring(2, 8)
-  return `ORD-${timestamp}-${random}`.toUpperCase()
+  const shortId = uuidv4().split('-')[0].toUpperCase()
+  return `ORD-${Date.now()}-${shortId}`
 }
 
 export function generateSlug(text: string): string {

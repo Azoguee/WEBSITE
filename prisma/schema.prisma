@@ -6,8 +6,22 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PENDING_FULFILLMENT
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+  REFUNDED
+}
+
+enum FulfillmentMode {
+  DELIVER_ACCOUNT
+  SERVICE_CREDENTIALS
 }
 
 model Category {
@@ -29,114 +43,102 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  sku         String   @unique
-  name        String
-  slug        String   @unique
-  description String?
-  price       Float
-  originalPrice Float?
-  currency    String   @default("VND")
-  categoryId  String
-  images      String // JSON array of image URLs
-  status      String   @default("active") // active, inactive, out_of_stock
-  isFeatured  Boolean  @default(false)
-  sortOrder   Int      @default(0)
-  metaTitle   String?
-  metaDescription String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  sku                     String   @unique
+  name                    String
+  slug                    String   @unique
+  description             String?  @db.Text
+  price                   Float
+  currency                String   @default("VND")
+  categoryId              String
+  images                  String?  @db.Text // Store as JSON string of URLs
+  status                  String   @default("active") // active, inactive
+  isFeatured              Boolean  @default(false)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  variants ProductVariant[]
-  leads    Lead[]
+  // Fulfillment specific fields
+  fulfillmentMode         FulfillmentMode @default(DELIVER_ACCOUNT)
+  fulfillmentInstructions String?         @db.Text // Private instructions for the admin
+  requiredCustomerFields  Json?           // e.g., ["username", "password"] or ["email"]
+
+  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
 
   @@index([categoryId, status])
-  @@index([isFeatured, status])
-  @@index([price])
   @@index([slug])
-  @@index([status, sortOrder])
   @@map("products")
 }
 
-model ProductVariant {
-  id        String  @id @default(cuid())
-  productId String
-  name      String  // e.g., "1 Tháng", "3 Tháng"
-  price     Float
-  isDefault Boolean @default(false)
-  sortOrder Int     @default(0)
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+model Order {
+  id                 String      @id @default(cuid())
+  status             OrderStatus @default(PENDING_PAYMENT)
+  totalAmount        Float
+  customerName       String
+  customerEmail      String
+  customerPhone      String?
 
-  @@map("product_variants")
+  // Sepay specific fields
+  sepayTransactionId String?     @unique // Unique ID from Sepay for this order
+  sepayQrCodeUrl     String?     @db.Text
+  sepayCheckoutUrl   String?     @db.Text
+
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  items              OrderItem[]
+  credential         CredentialVault?
+  auditLog           AuditLog[]
+
+  @@index([status])
+  @@index([customerEmail])
 }
 
-model Lead {
-  id           String   @id @default(cuid())
-  orderRef     String   @unique
-  productId    String?
-  productName  String
-  price        Float
-  variant      String?
-  quantity     Int      @default(1)
-  status       String   @default("pending_chat") // pending_chat, contacted, success, lost
-  sessionId    String?
-  clientIp     String?
-  userAgent    String?
-  landingUrl   String?
-  referrer     String?
-  utmSource    String?
-  utmCampaign  String?
-  utmMedium    String?
-  deviceType   String?
-  notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String  // Denormalized for easy display
+  quantity    Int
+  price       Float   // Price at the time of order
 
-  product Product? @relation(fields: [productId], references: [id])
-
-  @@index([status, createdAt])
-  @@index([productId])
-  @@index([createdAt])
-  @@index([clientIp])
-  @@map("leads")
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict) // Prevent product deletion if ordered
 }
 
-model AdminUser {
+
+// Secure vault for customer-provided credentials
+model CredentialVault {
+  id                   String   @id @default(cuid())
+  orderId              String   @unique
+  // Encrypted JSON blob of credentials
+  encryptedCredentials Bytes
+  // Initialization Vector for AES-256-CBC
+  iv                   String
+  accessLog            Json?    @default("[]") // Log who accessed this and when as a JSON array
+  createdAt            DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      String   @default("admin") // admin, super_admin
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  orderId   String
+  timestamp DateTime @default(now())
+  actor     String   // e.g., "admin@example.com" or "system"
+  message   String   @db.Text
 
-  @@map("admin_users")
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
-model Page {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  content     String
-  metaTitle   String?
-  metaDescription String?
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("pages")
+model NotificationLog {
+  id        String   @id @default(cuid())
+  channel   String   // "TELEGRAM" or "EMAIL"
+  recipient String
+  subject   String
+  content   String   @db.Text
+  success   Boolean
+  response  String?  @db.Text
+  timestamp DateTime @default(now())
 }
-
-model Setting {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String
-  type  String @default("string") // string, number, boolean, json
-
-  @@map("settings")
-}
-
