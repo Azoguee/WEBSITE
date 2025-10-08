@@ -1,55 +1,90 @@
-# E-commerce Website Base
+# E-commerce Foundation
 
-This is a Next.js e-commerce application designed for a specific business model where orders are not fulfilled automatically. Instead, each order is placed in a pending state, and the site owner is notified to source and process it manually.
+This is a starter e-commerce application built with Next.js and Prisma. It is designed to be a solid foundation for a custom online store, with a focus on a stable and maintainable codebase.
 
-The project is built with:
-- [Next.js](https://nextjs.org) (App Router)
-- [Prisma](https://prisma.io) for database access
-- [SQLite](https://www.sqlite.org/index.html) as the database for local development
-- [Tailwind CSS](https://tailwindcss.com) for styling
+## Core Technologies
+
+- **Framework**: [Next.js](https://nextjs.org) (App Router)
+- **Database ORM**: [Prisma](https://prisma.io)
+- **Database**: [SQLite](https://www.sqlite.org/index.html) for local development
+- **Styling**: [Tailwind CSS](https://tailwindcss.com)
+
+---
 
 ## Getting Started
 
-Follow these steps to get the development environment running.
+Follow these steps to get the development environment up and running.
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Azoguee/WEBSITE.git
 cd WEBSITE
 ```
 
-### 2. Install dependencies
+### 2. Install Dependencies
 
-This project uses `npm`. Make sure you have Node.js (v20.x or later) installed.
+This project uses `npm` for package management. Make sure you have Node.js (v18.x or v20.x) installed.
 
 ```bash
 npm install
 ```
 
-### 3. Set up the Database
+### 3. Set Up the Database
 
-This project uses Prisma to manage the database schema. The initial setup uses a local SQLite database, which requires no external services.
+The project is configured to use a local SQLite database for simplicity. To initialize the database and apply the schema, run:
 
-Run the following command to initialize the database and apply the schema:
 ```bash
 npx prisma db push
 ```
-*Note: This command will create a `dev.db` file in the `prisma` directory.*
+*Note: This command will create a `dev.db` file in the `prisma/` directory based on the schema.*
 
-### 4. Run the development server
+### 4. Run the Development Server
+
+Once the dependencies are installed and the database is set up, you can start the development server:
 
 ```bash
 npm run dev
 ```
 
-The application will be available at [http://localhost:3000](http://localhost:3000).
+The application will be available at **[http://localhost:3000](http://localhost:3000)**.
+
+---
+
+## Deployment & Build Strategy Notes
+
+### React 18 Versioning for Stability
+
+To ensure maximum stability and prevent unexpected build failures from dependency updates, this project uses **pinned (exact) versions** for React and its related type definitions in `package.json`. For example:
+
+```json
+"react": "18.3.1",
+"react-dom": "18.3.1",
+"@types/react": "18.3.26",
+"@types/react-dom": "18.3.7"
+```
+
+This strategy prevents `npm install` from fetching newer, potentially incompatible patch or minor versions, leading to more reliable and reproducible builds across different environments.
+
+### Continuous Integration (CI) on Vercel
+
+For deploying to Vercel or any other CI/CD environment, it is highly recommended to use `npm ci` instead of `npm install`.
+
+**`npm ci`** provides faster, more reliable builds by installing dependencies directly from the `package-lock.json` file. This ensures that the exact same dependency versions are used in both your local and CI environments.
+
+**Recommended Vercel Build Command:**
+
+```
+npm ci && npm run build
+```
+
+This can be set in your Vercel project's "Build & Development Settings".
 
 ## Available Scripts
 
 - `npm run dev`: Starts the development server.
-- `npm run build`: Creates a production build of the application.
-- `npm run start`: Starts a production server.
-- `npm run lint`: Runs the ESLint linter to check for code quality issues.
-- `npm run db:push`: Pushes the current Prisma schema to the database without creating a migration. Good for rapid prototyping.
-- `npm run db:generate`: Generates the Prisma Client based on your schema. This is run automatically after `npm install`.
+- `npm run build`: Creates a production-ready build of the application.
+- `npm run start`: Starts the production server after a build.
+- `npm run lint`: Runs ESLint to check for code quality issues.
+- `npm run db:push`: Applies schema changes directly to the database (ideal for development).
+- `npm run postinstall`: Generates the Prisma Client automatically after an install.
