@@ -75,15 +75,16 @@ For deploying to Vercel or any other CI/CD environment, it is highly recommended
 **Recommended Vercel Build Command:**
 
 ```
-npm ci && npm run build
+npm ci && npm run vercel-build
 ```
 
-This can be set in your Vercel project's "Build & Development Settings".
+This can be set in your Vercel project's "Build & Development Settings". A `vercel-build` script is included in `package.json` and is referenced in `vercel.json`. This ensures a consistent build command for Vercel deployments.
 
 ## Available Scripts
 
 - `npm run dev`: Starts the development server.
 - `npm run build`: Creates a production-ready build of the application.
+- `npm run vercel-build`: A dedicated script for Vercel builds. It is aliased to `npm run build`.
 - `npm run start`: Starts the production server after a build.
 - `npm run lint`: Runs ESLint to check for code quality issues.
 - `npm run db:push`: Applies schema changes directly to the database (ideal for development).
