@@ -25,9 +25,6 @@
   },
   "dependencies": {
     "@prisma/client": "^5.6.0",
-    "@types/bcryptjs": "^2.4.0",
-    "@types/react-dom": "^18.0.0",
-    "@types/uuid": "^9.0.0",
     "autoprefixer": "^10.4.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
@@ -36,6 +33,7 @@
     "date-fns": "^2.30.0",
     "framer-motion": "^10.16.0",
     "lucide-react": "^0.292.0",
+    "multer": "^1.4.4",
     "next": "^14.0.0",
     "postcss": "^8.4.0",
     "prisma": "^5.6.0",
@@ -50,8 +48,12 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@types/node": "24.7.0",
-    "@types/react": "19.2.2",
+    "@types/bcryptjs": "^2.4.0",
+    "@types/multer": "^1.4.0",
+    "@types/node": "20.19.19",
+    "@types/react": "18.3.26",
+    "@types/react-dom": "^18.0.0",
+    "@types/uuid": "^9.0.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "^14.0.0",
     "tsx": "^4.0.0",

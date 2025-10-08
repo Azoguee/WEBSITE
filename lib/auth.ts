@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
-import { v4 as uuidv4 } from 'uuid'
 
 // Simple session-based auth (use JWT in production)
 const SESSION_SECRET = process.env.SESSION_SECRET || 'your-session-secret'
@@ -22,7 +21,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 export function generateSessionToken(): string {
-  return uuidv4()
+  return Math.random().toString(36).substring(2) + Date.now().toString(36)
 }
 
 export async function getCurrentUser(request: NextRequest): Promise<AuthUser | null> {
