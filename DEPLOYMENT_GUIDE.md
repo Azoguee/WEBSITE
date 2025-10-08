@@ -40,7 +40,7 @@ export const runtime = 'nodejs'
 
 **Files đã sửa:**
 - `app/api/leads/route.ts`
-- `app/api/analytics/route.ts` 
+- `app/api/analytics/route.ts`
 - `app/api/leads/[id]/route.ts`
 - `app/api/health/route.ts` (mới)
 
@@ -134,7 +134,7 @@ curl -X POST https://your-domain.vercel.app/api/leads \
   -H "Content-Type: application/json" \
   -d '{"productName":"Test","price":100}'
 
-# Test analytics API  
+# Test analytics API
 curl -X POST https://your-domain.vercel.app/api/analytics \
   -H "Content-Type: application/json" \
   -d '{"event":"test","parameters":{}}'
@@ -177,7 +177,7 @@ vercel logs --follow
 
 # Check for these success messages:
 ✅ DATABASE_URL is configured
-✅ Prisma schema is valid  
+✅ Prisma schema is valid
 ✅ Prisma client generated
 ✅ Database connection successful
 ```
@@ -204,8 +204,8 @@ vercel logs --follow
 
 ## 🚀 READY TO DEPLOY!
 
-**Framework Preset:** `Next.js`  
-**Build Command:** `npm run vercel-build`  
-**Node.js Version:** `20.x`  
+**Framework Preset:** `Next.js`
+**Build Command:** `npm run vercel-build`
+**Node.js Version:** `20.x`
 
 **Tất cả lỗi Prisma đã được sửa triệt để!** 🎉

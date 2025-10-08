@@ -1,265 +1,90 @@
-# Website Bán Hàng Online - Tài Khoản Siêu Rẻ
+# E-commerce Foundation
 
-Website bán hàng online với tích hợp Zalo chat, không thanh toán trên web. Khi người dùng bấm "Mua", website sẽ mở chat Zalo và ghi nhận lead trong backend.
+This is a starter e-commerce application built with Next.js and Prisma. It is designed to be a solid foundation for a custom online store, with a focus on a stable and maintainable codebase.
 
-## Tính năng chính
+## Core Technologies
 
-- 🛒 **Giao diện bán hàng**: Trang chủ, danh mục, chi tiết sản phẩm
-- 💬 **Tích hợp Zalo**: Deeplink mở chat Zalo với prefill message
-- 📊 **Ghi nhận Lead**: Tự động tạo lead trước khi chuyển sang Zalo
-- 📈 **Analytics**: Tracking Google Analytics, Facebook Pixel, Zalo Ads
-- 🔧 **Admin Panel**: Quản lý sản phẩm, leads, dashboard
-- 📱 **Responsive**: Tối ưu cho mobile và desktop
-- 🚀 **SEO**: Meta tags, sitemap, structured data
-- ⚡ **Performance**: Core Web Vitals tối ưu
+- **Framework**: [Next.js](https://nextjs.org) (App Router)
+- **Database ORM**: [Prisma](https://prisma.io)
+- **Database**: [SQLite](https://www.sqlite.org/index.html) for local development
+- **Styling**: [Tailwind CSS](https://tailwindcss.com)
 
-## Công nghệ sử dụng
+---
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS
-- **Database**: SQLite với Prisma ORM
-- **UI Components**: Custom components với Lucide icons
-- **Analytics**: Google Analytics 4, Facebook Pixel
-- **Deployment**: Vercel/Netlify ready
+## Getting Started
 
-## Cài đặt
+Follow these steps to get the development environment up and running.
 
-### 1. Clone repository
+### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd ecommerce-zalo-website
+git clone https://github.com/Azoguee/WEBSITE.git
+cd WEBSITE
 ```
 
-### 2. Cài đặt dependencies
+### 2. Install Dependencies
+
+This project uses `npm` for package management. Make sure you have Node.js (v18.x or v20.x) installed.
 
 ```bash
 npm install
 ```
 
-### 3. Thiết lập environment variables
+### 3. Set Up the Database
 
-Copy file `.env.example` thành `.env` và cập nhật các giá trị:
-
-```bash
-cp env.example .env
-```
-
-Cập nhật các giá trị trong `.env`:
-
-```env
-# Database
-DATABASE_URL="file:./dev.db"
-
-# App Configuration
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here"
-
-# Zalo Configuration
-ZALO_OA_ID="your-zalo-oa-id"
-ZALO_OA_LINK="https://zalo.me/your-zalo-oa-link"
-
-# Analytics
-GOOGLE_ANALYTICS_ID="GA_MEASUREMENT_ID"
-FACEBOOK_PIXEL_ID="your-facebook-pixel-id"
-ZALO_ADS_CONVERSION_ID="your-zalo-ads-conversion-id"
-
-# Admin
-ADMIN_EMAIL="admin@example.com"
-ADMIN_PASSWORD="admin123"
-
-# Site Configuration
-SITE_NAME="Tài Khoản Siêu Rẻ"
-SITE_URL="https://your-domain.com"
-SITE_DESCRIPTION="Cung cấp tài khoản premium với giá siêu rẻ"
-```
-
-### 4. Khởi tạo database
+The project is configured to use a local SQLite database for simplicity. To initialize the database and apply the schema, run:
 
 ```bash
-# Generate Prisma client
-npm run db:generate
-
-# Push database schema
-npm run db:push
-
-# Import dữ liệu từ CSV
-npm run db:seed
+npx prisma db push
 ```
+*Note: This command will create a `dev.db` file in the `prisma/` directory based on the schema.*
 
-### 5. Chạy development server
+### 4. Run the Development Server
+
+Once the dependencies are installed and the database is set up, you can start the development server:
 
 ```bash
 npm run dev
 ```
 
-Website sẽ chạy tại `http://localhost:3000`
+The application will be available at **[http://localhost:3000](http://localhost:3000)**.
 
-## Cấu trúc dự án
+---
 
-```
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   ├── admin/             # Admin pages
-│   ├── danh-muc/          # Category pages
-│   ├── san-pham/          # Product pages
-│   └── globals.css        # Global styles
-├── components/            # React components
-│   ├── ui/               # UI components
-│   ├── Header.tsx        # Header component
-│   ├── Footer.tsx        # Footer component
-│   ├── ProductCard.tsx   # Product card
-│   └── ProductDetail.tsx # Product detail
-├── lib/                  # Utilities
-│   ├── db.ts            # Database connection
-│   ├── utils.ts         # Utility functions
-│   └── csv-import.ts    # CSV import logic
-├── prisma/              # Database schema
-│   ├── schema.prisma   # Prisma schema
-│   └── seed.ts         # Database seed
-├── scripts/            # Scripts
-│   └── import-csv.ts   # CSV import script
-└── types/              # TypeScript types
-    └── index.ts        # Type definitions
+## Deployment & Build Strategy Notes
+
+### React 18 Versioning for Stability
+
+To ensure maximum stability and prevent unexpected build failures from dependency updates, this project uses **pinned (exact) versions** for React and its related type definitions in `package.json`. For example:
+
+```json
+"react": "18.3.1",
+"react-dom": "18.3.1",
+"@types/react": "18.3.26",
+"@types/react-dom": "18.3.7"
 ```
 
-## API Endpoints
+This strategy prevents `npm install` from fetching newer, potentially incompatible patch or minor versions, leading to more reliable and reproducible builds across different environments.
 
-### Leads API
+### Continuous Integration (CI) on Vercel
 
-- `POST /api/leads` - Tạo lead mới
-- `GET /api/leads` - Lấy danh sách leads (admin)
-- `PATCH /api/leads/[id]` - Cập nhật lead
-- `DELETE /api/leads/[id]` - Xóa lead
+For deploying to Vercel or any other CI/CD environment, it is highly recommended to use `npm ci` instead of `npm install`.
 
-### Analytics API
+**`npm ci`** provides faster, more reliable builds by installing dependencies directly from the `package-lock.json` file. This ensures that the exact same dependency versions are used in both your local and CI environments.
 
-- `POST /api/analytics` - Gửi analytics event
-- `GET /api/analytics` - Lấy analytics data
-
-## Flow "Mua → Zalo"
-
-1. **User bấm nút "Mua/Chat Zalo"**
-2. **Tạo Lead**: API `/api/leads` tạo lead với status "pending_chat"
-3. **Build Zalo Link**: Tạo deeplink Zalo với prefill message
-4. **Open Zalo**: Mở Zalo app hoặc web với message đã điền sẵn
-5. **Track Analytics**: Gửi event "click_chat_zalo" đến analytics
-
-### Zalo Message Format
+**Recommended Vercel Build Command:**
 
 ```
-Mình muốn mua: {product_name} (SKU: {sku}) – Giá: {price} – Gói: {variant} – Từ: {source_page} – Ref: {order_ref}
+npm ci && npm run build
 ```
 
-## Admin Panel
+This can be set in your Vercel project's "Build & Development Settings".
 
-Truy cập `/admin` để quản lý:
+## Available Scripts
 
-- **Dashboard**: Tổng quan leads, doanh thu, tỷ lệ chuyển đổi
-- **Leads Management**: Xem, lọc, cập nhật trạng thái leads
-- **Export**: Xuất leads ra CSV
-- **Analytics**: Theo dõi hiệu suất
-
-## SEO Features
-
-- **Meta Tags**: Dynamic meta tags cho từng trang
-- **Sitemap**: Auto-generated sitemap.xml
-- **Robots.txt**: SEO-friendly robots.txt
-- **Structured Data**: Schema.org Product markup
-- **Open Graph**: Social media sharing optimization
-
-## Analytics Integration
-
-### Google Analytics 4
-```javascript
-gtag('event', 'click_chat_zalo', {
-  product_id: 'product-123',
-  product_name: 'Netflix Premium',
-  value: 150000,
-  currency: 'VND'
-});
-```
-
-### Facebook Pixel
-```javascript
-fbq('track', 'InitiateCheckout', {
-  content_ids: ['product-123'],
-  content_type: 'product',
-  value: 150000,
-  currency: 'VND'
-});
-```
-
-### Zalo Ads
-```javascript
-// Zalo Ads conversion tracking
-zaloAds.track('purchase', {
-  value: 150000,
-  currency: 'VND'
-});
-```
-
-## Performance Optimization
-
-- **Image Optimization**: Next.js Image component với WebP
-- **Code Splitting**: Dynamic imports cho admin pages
-- **Caching**: Static generation cho product pages
-- **CDN**: Vercel Edge Network
-- **Core Web Vitals**: LCP < 2.5s, FID < 100ms, CLS < 0.1
-
-## Deployment
-
-### Vercel (Recommended)
-
-1. Connect GitHub repository
-2. Set environment variables
-3. Deploy automatically
-
-### Manual Deployment
-
-```bash
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-## Monitoring & Analytics
-
-- **Google Analytics**: Traffic và conversion tracking
-- **Facebook Pixel**: Retargeting và lookalike audiences
-- **Zalo Ads**: Conversion tracking cho Zalo campaigns
-- **Admin Dashboard**: Real-time leads và revenue tracking
-
-## Troubleshooting
-
-### Database Issues
-```bash
-# Reset database
-rm prisma/dev.db
-npm run db:push
-npm run db:seed
-```
-
-### Import CSV Issues
-```bash
-# Manual CSV import
-npx tsx scripts/import-csv.ts
-```
-
-### Performance Issues
-- Check Core Web Vitals trong Google Search Console
-- Optimize images với Next.js Image component
-- Enable compression và caching
-
-## Support
-
-- **Documentation**: Xem code comments và README
-- **Issues**: Tạo GitHub issue cho bugs
-- **Features**: Tạo feature request
-
-## License
-
-MIT License - Xem file LICENSE để biết thêm chi tiết.
-
+- `npm run dev`: Starts the development server.
+- `npm run build`: Creates a production-ready build of the application.
+- `npm run start`: Starts the production server after a build.
+- `npm run lint`: Runs ESLint to check for code quality issues.
+- `npm run db:push`: Applies schema changes directly to the database (ideal for development).
+- `npm run postinstall`: Generates the Prisma Client automatically after an install.

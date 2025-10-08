@@ -233,6 +233,6 @@ curl http://localhost:3000/api/health
 - ✅ Vercel v2 configuration
 - ✅ Production deployment ready
 
-**Framework Preset:** `Next.js`  
-**Build Command:** `npm run vercel-build`  
+**Framework Preset:** `Next.js`
+**Build Command:** `npm run vercel-build`
 **Node.js Version:** `20.x`

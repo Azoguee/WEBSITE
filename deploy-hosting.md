@@ -388,4 +388,3 @@ tar -czf backup.tar.gz .
 ```
 
 Bạn muốn deploy lên hosting nào? Tôi sẽ hướng dẫn chi tiết hơn!
-

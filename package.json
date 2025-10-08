@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "20.x"
+    "node": "18.x || 20.x"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
@@ -15,19 +15,10 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:validate": "prisma validate",
-    "db:init": "tsx scripts/prisma-init.ts",
-    "check:runtime": "tsx scripts/check-runtime.ts",
-    "import:csv": "tsx scripts/import-csv.ts",
-    "setup": "npm install && npm run db:generate && npm run db:push && npm run db:seed",
-    "vercel-build": "npm run db:init && next build"
+    "db:validate": "prisma validate"
   },
   "dependencies": {
     "@prisma/client": "^5.6.0",
-    "@types/bcryptjs": "^2.4.0",
-    "@types/react-dom": "^18.0.0",
-    "@types/uuid": "^9.0.0",
     "autoprefixer": "^10.4.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
@@ -36,11 +27,12 @@
     "date-fns": "^2.30.0",
     "framer-motion": "^10.16.0",
     "lucide-react": "^0.292.0",
+    "multer": "^1.4.4",
     "next": "^14.0.0",
     "postcss": "^8.4.0",
     "prisma": "^5.6.0",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-hook-form": "^7.47.0",
     "react-hot-toast": "^2.4.0",
     "react-intersection-observer": "^9.5.0",
@@ -50,8 +42,12 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@types/node": "24.7.0",
-    "@types/react": "19.2.2",
+    "@types/bcryptjs": "^2.4.0",
+    "@types/multer": "^1.4.0",
+    "@types/node": "20.19.19",
+    "@types/react": "18.3.26",
+    "@types/react-dom": "18.3.7",
+    "@types/uuid": "^9.0.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "^14.0.0",
     "tsx": "^4.0.0",
