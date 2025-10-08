@@ -14,10 +14,6 @@ const nextConfig = {
     }
     return config
   },
-  // Environment variables for Prisma
-  env: {
-    DATABASE_URL: process.env.DATABASE_URL,
-  },
   async headers() {
     return [
       {
