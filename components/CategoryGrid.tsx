@@ -8,8 +8,8 @@ interface CategoryGridProps {
     id: string
     name: string
     slug: string
-    description?: string
-    image?: string
+    description?: string | null
+    image?: string | null
     products: Array<{
       id: string
       name: string

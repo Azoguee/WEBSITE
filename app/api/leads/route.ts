@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { generateOrderRef, getDeviceType, buildZaloLink } from '@/lib/utils'
 import { createLeadSchema, sanitizeString } from '@/lib/validation'
 import { rateLimit, getRateLimitHeaders } from '@/lib/rate-limit'
-import { Lead } from '@/types'
 
 // Force Node.js runtime for Prisma compatibility
 export const runtime = 'nodejs'
@@ -11,27 +11,33 @@ export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const clientIp = request.headers.get('x-forwarded-for') || 
-                    request.headers.get('x-real-ip') || 
-                    'unknown'
-    
-    if (!rateLimit(clientIp, 5, 60000)) { // 5 requests per minute
+    const clientIp =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown'
+
+    if (!rateLimit(clientIp, 5, 60000)) {
+      // 5 requests per minute
       return NextResponse.json(
         { success: false, error: 'Rate limit exceeded' },
-        { 
+        {
           status: 429,
-          headers: getRateLimitHeaders(clientIp, 5, 60000)
+          headers: getRateLimitHeaders(clientIp, 5, 60000),
         }
       )
     }
 
     const body = await request.json()
-    
+
     // Validate input
     const validationResult = createLeadSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid input', details: validationResult.error.errors },
+        {
+          success: false,
+          error: 'Invalid input',
+          details: validationResult.error.flatten().fieldErrors,
+        },
         { status: 400 }
       )
     }
@@ -62,38 +68,41 @@ export async function POST(request: NextRequest) {
     const orderRef = generateOrderRef()
 
     // Create lead
+    const leadData = {
+      orderRef,
+      productName: sanitizedProductName,
+      price: parseFloat(price.toString()),
+      quantity,
+      clientIp,
+      userAgent,
+      deviceType,
+      status: 'pending_chat' as const,
+      ...(productId && { productId }),
+      ...(sanitizedVariant && { variant: sanitizedVariant }),
+      ...(sessionId && { sessionId }),
+      ...(landingUrl && { landingUrl }),
+      ...(referrer && { referrer }),
+      ...(utmSource && { utmSource }),
+      ...(utmCampaign && { utmCampaign }),
+      ...(utmMedium && { utmMedium }),
+    }
+
     const lead = await prisma.lead.create({
-      data: {
-        orderRef,
-        productId,
-        productName: sanitizedProductName,
-        price: parseFloat(price.toString()),
-        variant: sanitizedVariant,
-        quantity,
-        sessionId,
-        clientIp,
-        userAgent,
-        landingUrl,
-        referrer,
-        utmSource,
-        utmCampaign,
-        utmMedium,
-        deviceType,
-        status: 'pending_chat',
-      },
+      data: leadData,
     })
 
     // Build Zalo link
     const zaloOaLink = process.env.ZALO_OA_LINK || 'https://zalo.me/your-zalo-oa'
-    const zaloLink = buildZaloLink({
+    const zaloLinkParams = {
       productName: sanitizedProductName,
       sku: productId || 'N/A',
       price: `${price} VND`,
-      variant: sanitizedVariant,
       sourcePage: landingUrl || 'Unknown',
       orderRef,
       zaloOaLink,
-    })
+      ...(sanitizedVariant && { variant: sanitizedVariant }),
+    }
+    const zaloLink = buildZaloLink(zaloLinkParams)
 
     return NextResponse.json({
       success: true,
@@ -105,6 +114,16 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error creating lead:', error)
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid data',
+          details: error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      )
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to create lead' },
       { status: 500 }
@@ -159,4 +178,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { analyticsSchema, sanitizeString } from '@/lib/validation'
+import { analyticsSchema } from '@/lib/validation'
 import { rateLimit, getRateLimitHeaders } from '@/lib/rate-limit'
 import { requireAuth } from '@/lib/auth'
 
@@ -10,27 +10,33 @@ export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const clientIp = request.headers.get('x-forwarded-for') || 
-                    request.headers.get('x-real-ip') || 
-                    'unknown'
-    
-    if (!rateLimit(clientIp, 10, 60000)) { // 10 requests per minute
+    const clientIp =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown'
+
+    if (!rateLimit(clientIp, 10, 60000)) {
+      // 10 requests per minute
       return NextResponse.json(
         { success: false, error: 'Rate limit exceeded' },
-        { 
+        {
           status: 429,
-          headers: getRateLimitHeaders(clientIp, 10, 60000)
+          headers: getRateLimitHeaders(clientIp, 10, 60000),
         }
       )
     }
 
     const body = await request.json()
-    
+
     // Validate input
     const validationResult = analyticsSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid input', details: validationResult.error.errors },
+        {
+          success: false,
+          error: 'Invalid input',
+          details: validationResult.error.flatten().fieldErrors,
+        },
         { status: 400 }
       )
     }
@@ -136,4 +142,3 @@ export const GET = requireAuth(async (request: NextRequest, user) => {
     )
   }
 })
-
