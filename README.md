@@ -1,4 +1,8 @@
-# E-commerce Foundation
+# KyoSHOP
+
+**KyoSHOP – Smart Pending Orders, Trusted Fulfillment**
+
+> *KyoSHOP is a modern e-commerce platform designed for pending-order workflows. Orders are captured, verified, and fulfilled manually to ensure accuracy and customer trust.*
 
 This is a starter e-commerce application built with Next.js and Prisma. It is designed to be a solid foundation for a custom online store, with a focus on a stable and maintainable codebase.
 
@@ -75,16 +79,15 @@ For deploying to Vercel or any other CI/CD environment, it is highly recommended
 **Recommended Vercel Build Command:**
 
 ```
-npm ci && npm run vercel-build
+npm ci && npm run build
 ```
 
-This can be set in your Vercel project's "Build & Development Settings". A `vercel-build` script is included in `package.json` and is referenced in `vercel.json`. This ensures a consistent build command for Vercel deployments.
+This can be set in your Vercel project's "Build & Development Settings".
 
 ## Available Scripts
 
 - `npm run dev`: Starts the development server.
 - `npm run build`: Creates a production-ready build of the application.
-- `npm run vercel-build`: A dedicated script for Vercel builds. It is aliased to `npm run build`.
 - `npm run start`: Starts the production server after a build.
 - `npm run lint`: Runs ESLint to check for code quality issues.
 - `npm run db:push`: Applies schema changes directly to the database (ideal for development).

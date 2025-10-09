@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button'
 import { MessageCircle, Star, Shield, Zap } from 'lucide-react'
 import Link from 'next/link'
 
-async function getFeaturedProducts() {
-  return await prisma.product.findMany({
+async function getFeaturedProducts(): Promise<Product[]> {
+  const products = await prisma.product.findMany({
     where: {
       isFeatured: true,
       status: 'active',
@@ -18,6 +18,25 @@ async function getFeaturedProducts() {
     orderBy: {
       sortOrder: 'asc',
     },
+  })
+
+  return products.map((product) => {
+    let parsedImages: string[] = []
+    try {
+      if (product.images) {
+        const parsed = JSON.parse(product.images as unknown as string)
+        if (Array.isArray(parsed)) {
+          parsedImages = parsed
+        }
+      }
+    } catch (e) {
+      console.error(`Failed to parse images for product ${product.id}`, e)
+    }
+    return {
+      ...product,
+      images: parsedImages,
+      status: product.status as Product['status'],
+    }
   })
 }
 
@@ -51,10 +70,10 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Tài Khoản Siêu Rẻ
+              KyoSHOP
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-primary-100">
-              Cung cấp tài khoản premium với giá siêu rẻ, chất lượng cao
+              KyoSHOP – Smart Pending Orders, Trusted Fulfillment
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -63,7 +82,11 @@ export default async function HomePage() {
                 className="animate-pulse-zalo"
                 asChild
               >
-                <a href="https://zalo.me/your-zalo" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://zalo.me/your-zalo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <MessageCircle className="w-5 h-5 mr-2" />
                   Chat Zalo Ngay
                 </a>
@@ -74,9 +97,7 @@ export default async function HomePage() {
                 className="bg-white text-primary-600 hover:bg-gray-100"
                 asChild
               >
-                <Link href="/danh-muc">
-                  Xem Tất Cả Sản Phẩm
-                </Link>
+                <Link href="/danh-muc">Xem Tất Cả Sản Phẩm</Link>
               </Button>
             </div>
           </div>
@@ -94,7 +115,7 @@ export default async function HomePage() {
               Chúng tôi cam kết mang đến dịch vụ tốt nhất với giá cả hợp lý
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -105,7 +126,7 @@ export default async function HomePage() {
                 Tất cả tài khoản đều được kiểm tra kỹ lưỡng trước khi giao
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Shield className="w-8 h-8 text-primary-600" />
@@ -115,7 +136,7 @@ export default async function HomePage() {
                 Cam kết bảo hành trong suốt thời gian sử dụng
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Zap className="w-8 h-8 text-primary-600" />
@@ -140,7 +161,7 @@ export default async function HomePage() {
               Khám phá các danh mục tài khoản premium phổ biến
             </p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {categories.map((category: Category) => (
               <Link
@@ -167,7 +188,7 @@ export default async function HomePage() {
               Những tài khoản premium được yêu thích nhất
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product: Product) => (
               <ProductCard
@@ -177,12 +198,10 @@ export default async function HomePage() {
               />
             ))}
           </div>
-          
+
           <div className="text-center mt-12">
             <Button size="lg" asChild>
-              <Link href="/danh-muc">
-                Xem Tất Cả Sản Phẩm
-              </Link>
+              <Link href="/danh-muc">Xem Tất Cả Sản Phẩm</Link>
             </Button>
           </div>
         </div>
@@ -204,7 +223,11 @@ export default async function HomePage() {
               className="animate-pulse-zalo"
               asChild
             >
-              <a href="https://zalo.me/your-zalo" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://zalo.me/your-zalo"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <MessageCircle className="w-5 h-5 mr-2" />
                 Chat Zalo Ngay
               </a>
@@ -215,9 +238,7 @@ export default async function HomePage() {
               className="bg-white text-primary-600 hover:bg-gray-100"
               asChild
             >
-              <a href="tel:0123456789">
-                Gọi Hotline
-              </a>
+              <a href="tel:0123456789">Gọi Hotline</a>
             </Button>
           </div>
         </div>
@@ -225,4 +246,3 @@ export default async function HomePage() {
     </div>
   )
 }
-

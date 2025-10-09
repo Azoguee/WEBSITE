@@ -12,10 +12,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 
 interface ProductDetailProps {
-  product: Product & {
-    category: any
-    variants: any[]
-  }
+  product: Product
   relatedProducts: Product[]
 }
 

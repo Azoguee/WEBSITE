@@ -79,7 +79,7 @@ export async function importProductsFromCSV(csvData: any[]): Promise<{
               price,
               description: row.description || '',
               status: row.status === 'HẾT HÀNG' ? 'out_of_stock' : 'active',
-              images: row.images ? [row.images] : [],
+              images: row.images ? JSON.stringify([row.images]) : '[]',
             }
           })
         } else {
@@ -93,7 +93,7 @@ export async function importProductsFromCSV(csvData: any[]): Promise<{
               price,
               currency: 'VND',
               categoryId,
-              images: row.images ? [row.images] : [],
+              images: row.images ? JSON.stringify([row.images]) : '[]',
               status: row.status === 'HẾT HÀNG' ? 'out_of_stock' : 'active',
               isFeatured: false,
               sortOrder: 0,

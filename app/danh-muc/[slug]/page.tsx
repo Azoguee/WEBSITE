@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { CategoryPage } from '@/components/CategoryPage'
 import { Metadata } from 'next'
+import { Product } from '@/types'
 
 interface CategoryPageProps {
   params: {
@@ -89,8 +90,24 @@ async function getProducts(
     prisma.product.count({ where }),
   ])
 
+  const productsWithParsedImages = products.map((product) => {
+    let parsedImages: string[] = []
+    try {
+      if (product.images) {
+        parsedImages = JSON.parse(product.images as unknown as string)
+      }
+    } catch (e) {
+      console.error(`Failed to parse images for product ${product.id}`, e)
+    }
+    return {
+      ...product,
+      images: Array.isArray(parsedImages) ? parsedImages : [],
+      status: product.status as Product['status'],
+    }
+  })
+
   return {
-    products,
+    products: productsWithParsedImages,
     pagination: {
       page,
       limit,
@@ -155,4 +172,3 @@ export default async function CategoryPageComponent({ params, searchParams }: Ca
     />
   )
 }
-

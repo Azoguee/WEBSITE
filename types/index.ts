@@ -3,17 +3,17 @@ export interface Product {
   sku: string;
   name: string;
   slug: string;
-  description?: string;
+  description?: string | null;
   price: number;
-  originalPrice?: number;
+  originalPrice?: number | null;
   currency: string;
   categoryId: string;
   images: string[];
   status: 'active' | 'inactive' | 'out_of_stock';
   isFeatured: boolean;
   sortOrder: number;
-  metaTitle?: string;
-  metaDescription?: string;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
   createdAt: Date;
   updatedAt: Date;
   category?: Category;
@@ -33,8 +33,8 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
-  description?: string;
-  image?: string;
+  description?: string | null;
+  image?: string | null;
   isActive: boolean;
   sortOrder: number;
   createdAt: Date;
@@ -98,4 +98,3 @@ export interface CSVProduct {
   description?: string;
   status?: string;
 }
-
