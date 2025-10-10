@@ -1,10 +1,8 @@
-import { redirect } from 'next/navigation'
-import { AdminDashboard } from '@/components/AdminDashboard'
+import { AdminDashboardData } from '@/components/AdminDashboardData'
 
 export default function AdminPage() {
   // In a real app, you would check authentication here
   // For now, we'll just show the dashboard
 
-  return <AdminDashboard />
+  return <AdminDashboardData />
 }
-

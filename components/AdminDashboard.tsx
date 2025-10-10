@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatPrice } from '@/lib/utils'
@@ -10,10 +10,7 @@ import {
   TrendingUp,
   DollarSign,
   Download,
-  Filter,
   Search,
-  Eye,
-  Edit,
   Trash2
 } from 'lucide-react'
 
@@ -22,9 +19,9 @@ interface Lead {
   orderRef: string
   productName: string
   price: number
-  variant?: string
+  variant: string | null
   status: string
-  createdAt: string
+  createdAt: Date
   product?: {
     name: string
   }
@@ -43,10 +40,14 @@ interface Analytics {
   }
 }
 
-export function AdminDashboard() {
-  const [leads, setLeads] = useState<Lead[]>([])
-  const [analytics, setAnalytics] = useState<Analytics | null>(null)
-  const [loading, setLoading] = useState(true)
+interface AdminDashboardProps {
+    initialAnalytics: Analytics;
+    initialLeads: Lead[];
+}
+
+export function AdminDashboard({ initialAnalytics, initialLeads }: AdminDashboardProps) {
+  const [leads, setLeads] = useState<Lead[]>(initialLeads)
+  const [analytics, setAnalytics] = useState<Analytics | null>(initialAnalytics)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -58,8 +59,6 @@ export function AdminDashboard() {
       setAnalytics(data)
     } catch (error) {
       console.error('Error fetching analytics:', error)
-    } finally {
-      setLoading(false)
     }
   }, [])
 
@@ -81,9 +80,12 @@ export function AdminDashboard() {
   }, [currentPage, searchTerm, statusFilter])
 
   useEffect(() => {
-    fetchLeads()
-    fetchAnalytics()
-  }, [fetchLeads, fetchAnalytics])
+    // Data is now fetched on the server, so we don't need to fetch it again on the client.
+    // We can still re-fetch data on the client if we need to, for example, when a filter changes.
+    if (searchTerm || statusFilter || currentPage > 1) {
+        fetchLeads();
+    }
+  }, [fetchLeads, searchTerm, statusFilter, currentPage]);
 
   const updateLeadStatus = async (leadId: string, status: string) => {
     try {
@@ -156,17 +158,6 @@ export function AdminDashboard() {
       case 'lost': return 'Mất khách'
       default: return status
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải...</p>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -344,4 +335,3 @@ export function AdminDashboard() {
     </div>
   )
 }
-
