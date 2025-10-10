@@ -5,17 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Product } from '@/types'
 import { ProductCard } from '@/components/ProductCard'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatPrice } from '@/lib/utils'
+import { Card, CardContent } from '@/components/ui/card'
 import { Search, Filter, SortAsc, Grid, List } from 'lucide-react'
 
 interface CategoryPageProps {
   category: {
     id: string
     name: string
-    slug: string
-    description?: string | null
-    image?: string | null
   }
   products: Product[]
   pagination: {
@@ -47,14 +43,14 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
       params.delete('search')
     }
     params.delete('page') // Reset to first page
-    router.push(`/danh-muc/${category.slug}?${params.toString()}`)
+    router.push(`/danh-muc/${category.name}?${params.toString()}`)
   }
 
   const handleSort = (sort: string) => {
     const params = new URLSearchParams(currentSearchParams.toString())
     params.set('sort', sort)
     params.delete('page') // Reset to first page
-    router.push(`/danh-muc/${category.slug}?${params.toString()}`)
+    router.push(`/danh-muc/${category.name}?${params.toString()}`)
   }
 
   const handlePriceFilter = (minPrice?: number, maxPrice?: number) => {
@@ -70,7 +66,7 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
       params.delete('max_price')
     }
     params.delete('page') // Reset to first page
-    router.push(`/danh-muc/${category.slug}?${params.toString()}`)
+    router.push(`/danh-muc/${category.name}?${params.toString()}`)
   }
 
   const handleBuyClick = (product: Product) => {
@@ -95,9 +91,6 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
         {/* Category Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{category.name}</h1>
-          {category.description && (
-            <p className="text-lg text-gray-600">{category.description}</p>
-          )}
         </div>
 
         {/* Search and Filters */}
@@ -243,7 +236,7 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
             <p className="text-gray-500 text-lg">Không tìm thấy sản phẩm nào</p>
             <Button
               variant="outline"
-              onClick={() => router.push(`/danh-muc/${category.slug}`)}
+              onClick={() => router.push(`/danh-muc/${category.name}`)}
               className="mt-4"
             >
               Xóa bộ lọc
@@ -261,7 +254,7 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
                 onClick={() => {
                   const params = new URLSearchParams(currentSearchParams.toString())
                   params.set('page', (pagination.page - 1).toString())
-                  router.push(`/danh-muc/${category.slug}?${params.toString()}`)
+                  router.push(`/danh-muc/${category.name}?${params.toString()}`)
                 }}
               >
                 Trước
@@ -278,7 +271,7 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
                     onClick={() => {
                       const params = new URLSearchParams(currentSearchParams.toString())
                       params.set('page', page.toString())
-                      router.push(`/danh-muc/${category.slug}?${params.toString()}`)
+                      router.push(`/danh-muc/${category.name}?${params.toString()}`)
                     }}
                     className="w-10"
                   >
@@ -293,7 +286,7 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
                 onClick={() => {
                   const params = new URLSearchParams(currentSearchParams.toString())
                   params.set('page', (pagination.page + 1).toString())
-                  router.push(`/danh-muc/${category.slug}?${params.toString()}`)
+                  router.push(`/danh-muc/${category.name}?${params.toString()}`)
                 }}
               >
                 Sau
@@ -305,4 +298,3 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
     </div>
   )
 }
-

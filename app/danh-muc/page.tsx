@@ -1,25 +1,20 @@
 import { prisma } from '@/lib/db'
+export const dynamic = 'force-dynamic'
 import { CategoryGrid } from '@/components/CategoryGrid'
 import { Metadata } from 'next'
 
 async function getCategories() {
   return await prisma.category.findMany({
-    where: {
-      isActive: true,
-    },
     include: {
       products: {
         where: {
-          status: 'active',
+          isActive: true,
         },
         take: 4,
         orderBy: {
           createdAt: 'desc',
         },
       },
-    },
-    orderBy: {
-      sortOrder: 'asc',
     },
   })
 }

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/db'
 import { CategoryPage } from '@/components/CategoryPage'
 import { Metadata } from 'next'
@@ -19,7 +20,7 @@ interface CategoryPageProps {
 
 async function getCategory(slug: string) {
   return await prisma.category.findUnique({
-    where: { slug },
+    where: { name: slug },
   })
 }
 
@@ -81,7 +82,6 @@ async function getProducts(
       where,
       include: {
         category: true,
-        variants: true,
       },
       orderBy,
       skip,
@@ -90,24 +90,8 @@ async function getProducts(
     prisma.product.count({ where }),
   ])
 
-  const productsWithParsedImages = products.map((product) => {
-    let parsedImages: string[] = []
-    try {
-      if (product.images) {
-        parsedImages = JSON.parse(product.images as unknown as string)
-      }
-    } catch (e) {
-      console.error(`Failed to parse images for product ${product.id}`, e)
-    }
-    return {
-      ...product,
-      images: Array.isArray(parsedImages) ? parsedImages : [],
-      status: product.status as Product['status'],
-    }
-  })
-
   return {
-    products: productsWithParsedImages,
+    products: products,
     pagination: {
       page,
       limit,
@@ -128,15 +112,14 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
   return {
     title: `${category.name} - Tài Khoản Siêu Rẻ`,
-    description: category.description || `Khám phá các sản phẩm ${category.name} với giá siêu rẻ. Chất lượng cao, bảo hành lâu dài.`,
+    description: `Khám phá các sản phẩm ${category.name} với giá siêu rẻ. Chất lượng cao, bảo hành lâu dài.`,
     keywords: `${category.name}, tài khoản premium, ${category.name} giá rẻ`,
     openGraph: {
       title: `${category.name} - Tài Khoản Siêu Rẻ`,
-      description: category.description || `Khám phá các sản phẩm ${category.name} với giá siêu rẻ.`,
-      images: category.image ? [category.image] : [],
+      description: `Khám phá các sản phẩm ${category.name} với giá siêu rẻ.`,
     },
     alternates: {
-      canonical: `/danh-muc/${category.slug}`,
+      canonical: `/danh-muc/${params.slug}`,
     },
   }
 }

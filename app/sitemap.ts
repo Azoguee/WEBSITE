@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/db'
+export const dynamic = 'force-dynamic'
 import { Category, Product } from '@/types'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -35,12 +36,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Categories
   const categories = await prisma.category.findMany({
-    where: { isActive: true },
-    select: { slug: true, updatedAt: true },
+    select: { name: true, updatedAt: true },
   })
 
-  const categoryPages = categories.map((category: { slug: string; updatedAt: Date }) => ({
-    url: `${baseUrl}/danh-muc/${category.slug}`,
+  const categoryPages = categories.map((category: { name: string; updatedAt: Date }) => ({
+    url: `${baseUrl}/danh-muc/${category.name}`,
     lastModified: category.updatedAt,
     changeFrequency: 'weekly' as const,
     priority: 0.7,
@@ -48,12 +48,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Products
   const products = await prisma.product.findMany({
-    where: { status: 'active' },
-    select: { slug: true, updatedAt: true },
+    where: { isActive: true },
+    select: { sku: true, updatedAt: true },
   })
 
-  const productPages = products.map((product: { slug: string; updatedAt: Date }) => ({
-    url: `${baseUrl}/san-pham/${product.slug}`,
+  const productPages = products.filter(p => p.sku).map((product: { sku: string | null; updatedAt: Date }) => ({
+    url: `${baseUrl}/san-pham/${product.sku}`,
     lastModified: product.updatedAt,
     changeFrequency: 'weekly' as const,
     priority: 0.6,

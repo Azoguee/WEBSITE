@@ -1,31 +1,26 @@
 'use client'
 
 import { useState } from 'react'
-import { Product } from '@/types'
+import { Product, Category } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ProductCard } from '@/components/ProductCard'
-import { formatPrice, buildZaloLink, generateOrderRef } from '@/lib/utils'
+import { generateOrderRef } from '@/lib/utils'
 import { MessageCircle, Star, Shield, Truck, CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 
 interface ProductDetailProps {
-  product: Product
+  product: Product & { category?: Category | null }
   relatedProducts: Product[]
 }
 
 export function ProductDetail({ product, relatedProducts }: ProductDetailProps) {
-  const [selectedVariant, setSelectedVariant] = useState(
-    product.variants?.find(v => v.isDefault) || product.variants?.[0]
-  )
   const [quantity, setQuantity] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
 
-  const isOutOfStock = product.status === 'out_of_stock'
-  const hasDiscount = product.originalPrice && product.originalPrice > product.price
-  const finalPrice = selectedVariant?.price || product.price
+  const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK';
 
   const handleBuyClick = async () => {
     if (isOutOfStock) {
@@ -46,8 +41,7 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
         body: JSON.stringify({
           productId: product.id,
           productName: product.name,
-          price: finalPrice,
-          variant: selectedVariant?.name,
+          price: product.priceVnd,
           quantity,
           sessionId: sessionStorage.getItem('sessionId') || null,
           landingUrl: window.location.href,
@@ -69,9 +63,8 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
             parameters: {
               product_id: product.id,
               product_name: product.name,
-              value: finalPrice,
+              value: product.priceVnd,
               currency: 'VND',
-              variant: selectedVariant?.name,
               source_page: window.location.href,
               order_ref: result.lead.orderRef,
             },
@@ -100,47 +93,25 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
           <li><Link href="/" className="hover:text-primary-600">Trang chủ</Link></li>
           <li>/</li>
           <li><Link href="/danh-muc" className="hover:text-primary-600">Danh mục</Link></li>
-          <li>/</li>
-          <li><Link href={`/danh-muc/${product.category?.slug}`} className="hover:text-primary-600">{product.category?.name}</Link></li>
+          {product.category && (
+            <>
+              <li>/</li>
+              <li><Link href={`/danh-muc/${product.category.name}`} className="hover:text-primary-600">{product.category.name}</Link></li>
+            </>
+          )}
           <li>/</li>
           <li className="text-gray-900">{product.name}</li>
         </ol>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-        {/* Product Images */}
+        {/* Product Images Placeholder */}
         <div className="space-y-4">
           <div className="aspect-square bg-white rounded-lg overflow-hidden">
-            {product.images && product.images.length > 0 ? (
-              <Image
-                src={product.images[0]}
-                alt={product.name}
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                <span className="text-gray-400 text-lg">Không có ảnh</span>
-              </div>
-            )}
-          </div>
-          
-          {product.images && product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2">
-              {product.images.slice(1, 5).map((image, index) => (
-                <div key={index} className="aspect-square bg-white rounded-lg overflow-hidden">
-                  <Image
-                    src={image}
-                    alt={`${product.name} ${index + 2}`}
-                    width={150}
-                    height={150}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-400 text-lg">Không có ảnh</span>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Product Info */}
@@ -163,41 +134,11 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <span className="text-3xl font-bold text-primary-600">
-                {formatPrice(finalPrice)}
+                {product.priceVnd
+                  ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.priceVnd)
+                  : product.priceNote || 'Liên hệ'}
               </span>
-              {hasDiscount && (
-                <span className="text-lg text-gray-500 line-through">
-                  {formatPrice(product.originalPrice!)}
-                </span>
-              )}
-              {hasDiscount && (
-                <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-medium">
-                  -{Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)}%
-                </span>
-              )}
             </div>
-
-            {product.variants && product.variants.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Chọn gói:</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {product.variants.map((variant) => (
-                    <button
-                      key={variant.id}
-                      onClick={() => setSelectedVariant(variant)}
-                      className={`p-3 border rounded-lg text-left transition-colors ${
-                        selectedVariant?.id === variant.id
-                          ? 'border-primary-500 bg-primary-50 text-primary-700'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      <div className="font-medium">{variant.name}</div>
-                      <div className="text-sm text-gray-600">{formatPrice(variant.price)}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div className="flex items-center gap-4">
               <div className="flex items-center">
@@ -263,21 +204,6 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
         </div>
       </div>
 
-      {/* Product Description */}
-      {product.description && (
-        <Card className="mb-12">
-          <CardHeader>
-            <CardTitle>Mô tả sản phẩm</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div 
-              className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: product.description }}
-            />
-          </CardContent>
-        </Card>
-      )}
-
       {/* Related Products */}
       {relatedProducts.length > 0 && (
         <div>
@@ -296,4 +222,3 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
     </div>
   )
 }
-
