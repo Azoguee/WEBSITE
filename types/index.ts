@@ -1,42 +1,23 @@
+import { StockStatus as PrismaStockStatus } from '@prisma/client';
+
 export interface Product {
   id: string;
-  sku: string;
   name: string;
-  slug: string;
-  description?: string | null;
-  price: number;
-  originalPrice?: number | null;
-  currency: string;
-  categoryId: string;
-  images: string[];
-  status: 'active' | 'inactive' | 'out_of_stock';
-  isFeatured: boolean;
-  sortOrder: number;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
+  priceVnd: number | null;
+  priceNote: string | null;
+  stockStatus: PrismaStockStatus;
+  type: string | null;
+  sku: string | null;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  category?: Category;
-  variants?: ProductVariant[];
-}
-
-export interface ProductVariant {
-  id: string;
-  productId: string;
-  name: string;
-  price: number;
-  isDefault: boolean;
-  sortOrder: number;
+  categoryId: string | null;
+  category?: Category | null;
 }
 
 export interface Category {
   id: string;
   name: string;
-  slug: string;
-  description?: string | null;
-  image?: string | null;
-  isActive: boolean;
-  sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
   products?: Product[];

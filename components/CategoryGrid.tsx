@@ -2,20 +2,13 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
+import { Product } from '@/types'
 
 interface CategoryGridProps {
   categories: Array<{
     id: string
     name: string
-    slug: string
-    description?: string | null
-    image?: string | null
-    products: Array<{
-      id: string
-      name: string
-      price: number
-      currency: string
-    }>
+    products: Product[]
   }>
 }
 
@@ -26,23 +19,22 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
         <Card key={category.id} className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="text-xl">{category.name}</CardTitle>
-            {category.description && (
-              <p className="text-gray-600">{category.description}</p>
-            )}
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {category.products.length > 0 ? (
+              {category.products && category.products.length > 0 ? (
                 <>
                   <div className="space-y-2">
                     {category.products.slice(0, 3).map((product) => (
                       <div key={product.id} className="flex justify-between items-center text-sm">
                         <span className="truncate">{product.name}</span>
                         <span className="font-medium text-primary-600">
-                          {new Intl.NumberFormat('vi-VN', {
-                            style: 'currency',
-                            currency: product.currency,
-                          }).format(product.price)}
+                          {product.priceVnd
+                            ? new Intl.NumberFormat('vi-VN', {
+                                style: 'currency',
+                                currency: 'VND',
+                              }).format(product.priceVnd)
+                            : product.priceNote || 'Liên hệ'}
                         </span>
                       </div>
                     ))}
@@ -58,7 +50,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
               )}
               
               <Button asChild className="w-full">
-                <Link href={`/danh-muc/${category.slug}`}>
+                <Link href={`/danh-muc/${category.name}`}>
                   Xem tất cả
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
@@ -70,4 +62,3 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
     </div>
   )
 }
-

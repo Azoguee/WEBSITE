@@ -6,53 +6,32 @@ import { Product } from '@/types'
 
 interface ProductPageProps {
   params: {
-    slug: string
+    slug: string // This "slug" will now be the SKU
   }
 }
 
-async function getProduct(slug: string): Promise<Product | null> {
-  const product = await prisma.product.findUnique({
-    where: { slug },
+// The 'slug' parameter is now treated as the SKU
+async function getProduct(sku: string) {
+  return await prisma.product.findUnique({
+    where: { sku },
     include: {
       category: true,
-      variants: {
-        orderBy: { sortOrder: 'asc' },
-      },
     },
   })
-
-  if (!product) {
-    return null
-  }
-
-  let parsedImages: string[] = []
-  try {
-    if (product.images) {
-      const parsed = JSON.parse(product.images as unknown as string)
-      if (Array.isArray(parsed)) {
-        parsedImages = parsed
-      }
-    }
-  } catch (e) {
-    console.error(`Failed to parse images for product ${product.id}`, e)
-  }
-
-  return {
-    ...product,
-    images: parsedImages,
-    status: product.status as Product['status'],
-  }
 }
 
 async function getRelatedProducts(
-  categoryId: string,
+  categoryId: string | null,
   productId: string
 ): Promise<Product[]> {
+  if (!categoryId) {
+    return []
+  }
   const products = await prisma.product.findMany({
     where: {
       categoryId,
       id: { not: productId },
-      status: 'active',
+      isActive: true,
     },
     include: {
       category: true,
@@ -62,25 +41,7 @@ async function getRelatedProducts(
       createdAt: 'desc',
     },
   })
-
-  return products.map((product) => {
-    let parsedImages: string[] = []
-    try {
-      if (product.images) {
-        const parsed = JSON.parse(product.images as unknown as string)
-        if (Array.isArray(parsed)) {
-          parsedImages = parsed
-        }
-      }
-    } catch (e) {
-      console.error(`Failed to parse images for product ${product.id}`, e)
-    }
-    return {
-      ...product,
-      images: parsedImages,
-      status: product.status as Product['status'],
-    }
-  })
+  return products as Product[] // Cast to the correct type from types/index.ts
 }
 
 export async function generateMetadata({
@@ -94,28 +55,24 @@ export async function generateMetadata({
     }
   }
 
+  const description = `Mua ${product.name} với giá siêu rẻ. ${product.priceNote || ''}. Chất lượng cao, bảo hành lâu dài.`
+
   return {
     title: `${product.name} - Tài Khoản Siêu Rẻ`,
-    description:
-      product.metaDescription ||
-      product.description ||
-      `Mua ${product.name} với giá siêu rẻ. Chất lượng cao, bảo hành lâu dài.`,
+    description: description,
     keywords: `${product.name}, tài khoản premium, ${product.category?.name}`,
     openGraph: {
       title: `${product.name} - Tài Khoản Siêu Rẻ`,
-      description:
-        product.metaDescription ||
-        product.description ||
-        `Mua ${product.name} với giá siêu rẻ.`,
-      images: product.images.length > 0 ? [product.images[0]] : [],
+      description: description,
     },
     alternates: {
-      canonical: `/san-pham/${product.slug}`,
+      canonical: `/san-pham/${product.sku}`,
     },
   }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
+  // The "slug" from the URL is now the SKU
   const product = await getProduct(params.slug)
 
   if (!product) {
@@ -129,7 +86,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ProductDetail product={product} relatedProducts={relatedProducts} />
+      <ProductDetail product={product as Product} relatedProducts={relatedProducts} />
     </div>
   )
 }

@@ -5,51 +5,41 @@ import { Button } from '@/components/ui/button'
 import { MessageCircle, Star, Shield, Zap } from 'lucide-react'
 import Link from 'next/link'
 
-async function getFeaturedProducts(): Promise<Product[]> {
-  const products = await prisma.product.findMany({
-    where: {
-      isFeatured: true,
-      status: 'active',
-    },
-    include: {
-      category: true,
-    },
-    take: 8,
-    orderBy: {
-      sortOrder: 'asc',
-    },
-  })
+export const dynamic = 'force-dynamic'
 
-  return products.map((product) => {
-    let parsedImages: string[] = []
-    try {
-      if (product.images) {
-        const parsed = JSON.parse(product.images as unknown as string)
-        if (Array.isArray(parsed)) {
-          parsedImages = parsed
-        }
-      }
-    } catch (e) {
-      console.error(`Failed to parse images for product ${product.id}`, e)
-    }
-    return {
-      ...product,
-      images: parsedImages,
-      status: product.status as Product['status'],
-    }
-  })
+async function getFeaturedProducts(): Promise<Product[]> {
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        isActive: true, // Assuming this is the equivalent of isFeatured
+      },
+      include: {
+        category: true,
+      },
+      take: 8,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+    return products as Product[]
+  } catch (error) {
+    console.error("Failed to fetch featured products:", error);
+    return []; // Return empty array on error
+  }
 }
 
-async function getCategories() {
-  return await prisma.category.findMany({
-    where: {
-      isActive: true,
-    },
-    orderBy: {
-      sortOrder: 'asc',
-    },
-    take: 6,
-  })
+async function getCategories(): Promise<Category[]> {
+  try {
+    return await prisma.category.findMany({
+      take: 6,
+      orderBy: {
+        name: 'asc',
+      },
+    })
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    return []; // Return empty array on error
+  }
 }
 
 export default async function HomePage() {
@@ -166,7 +156,7 @@ export default async function HomePage() {
             {categories.map((category: Category) => (
               <Link
                 key={category.id}
-                href={`/danh-muc/${category.slug}`}
+                href={`/danh-muc/${category.name}`}
                 className="bg-white rounded-lg p-6 text-center hover:shadow-lg transition-shadow"
               >
                 <div className="text-2xl mb-2">📱</div>
