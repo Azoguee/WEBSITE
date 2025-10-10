@@ -108,7 +108,7 @@ export default function ProductsPage() {
   const renderEditableCell = (product: ProductWithCategory, field: keyof Product) => {
     if (editingProduct?.id === product.id) {
       if (field === 'isActive') {
-        return <Checkbox checked={editingProduct[field] as boolean} onCheckedChange={(checked) => setEditingProduct({...editingProduct, [field]: checked})} />;
+        return <Checkbox checked={editingProduct[field] as boolean} onCheckedChange={(checked) => setEditingProduct({...editingProduct, [field]: checked === true})} />;
       }
        if (field === 'stockStatus') {
         return (
