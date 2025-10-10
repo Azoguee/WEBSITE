@@ -29,6 +29,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'File is required.' }, { status: 400 });
     }
 
+    if (file.type !== 'text/csv') {
+      return NextResponse.json(
+        { error: 'Invalid file type. Please upload a CSV file.' },
+        { status: 400 },
+      );
+    }
+
     const searchParams = req.nextUrl.searchParams;
     const mode = searchParams.get('mode') || 'import';
     const deactivateMissing = searchParams.get('deactivateMissing') === 'true';
