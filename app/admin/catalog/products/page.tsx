@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'react-hot-toast';
-import { Product, Category } from '@prisma/client';
+import { Product, Category, StockStatus as PrismaStockStatus } from '@prisma/client';
 import debounce from 'lodash.debounce';
 
 const StockStatus = {
@@ -108,11 +108,11 @@ export default function ProductsPage() {
   const renderEditableCell = (product: ProductWithCategory, field: keyof Product) => {
     if (editingProduct?.id === product.id) {
       if (field === 'isActive') {
-        return <Checkbox checked={editingProduct[field] as boolean} onCheckedChange={(checked) => setEditingProduct({...editingProduct, [field]: checked})} />;
+        return <Checkbox checked={editingProduct[field] as boolean} onCheckedChange={(checked) => setEditingProduct({...editingProduct, [field]: checked === true})} />;
       }
        if (field === 'stockStatus') {
         return (
-          <Select value={editingProduct[field] as string} onValueChange={(value) => setEditingProduct({...editingProduct, [field]: value})}>
+          <Select value={editingProduct[field] as string} onValueChange={(value) => setEditingProduct({...editingProduct, [field]: value as PrismaStockStatus})}>
             <SelectTrigger><SelectValue/></SelectTrigger>
             <SelectContent>
               {Object.values(StockStatus).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}

@@ -1,13 +1,12 @@
 #!/bin/bash
+set -euo pipefail
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
+export DATABASE_URL="${DATABASE_URL:-$POSTGRES_URL}"
 
 # Always run 'prisma db push' to sync the schema directly.
 # This is a robust way to handle inconsistent migration histories.
 echo "Running 'prisma db push' to sync schema..."
 npx prisma db push --accept-data-loss
 
-# Run the Next.js build.
-echo "Running 'next build'..."
+echo "Next.js build..."
 next build
