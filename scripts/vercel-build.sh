@@ -1,20 +1,13 @@
 #!/bin/bash
+set -euo pipefail
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
+export DATABASE_URL="${DATABASE_URL:-$POSTGRES_URL}"
 
-# Set the DATABASE_URL to the direct connection string for migrations
-export DATABASE_URL="$STORAGE_POSTGRES_URL"
+echo "Prisma generate..."
+npx prisma generate
 
-# Run the appropriate Prisma command based on the Vercel environment.
-if [ "$VERCEL_ENV" = "production" ]; then
-  echo "Vercel environment is production, running 'prisma migrate deploy'..."
-  npx prisma migrate deploy --schema=prisma/schema.prisma
-else
-  echo "Vercel environment is not production, running 'prisma db push'..."
-  npx prisma db push --schema=prisma/schema.prisma
-fi
+echo "Prisma migrate deploy..."
+npx prisma migrate deploy --schema=prisma/schema.prisma
 
-# Run the Next.js build.
-echo "Running 'next build'..."
+echo "Next.js build..."
 next build
