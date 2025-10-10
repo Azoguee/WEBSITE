@@ -29,7 +29,12 @@ model Category {
 model Product {
   id          String      @id @default(cuid())
   name        String
+  description String?
+  images      String[]
   priceVnd    Int?
+  oldPrice    Int?
+  discount    String?
+  rating      Float?
   priceNote   String?
   stockStatus StockStatus @default(UNKNOWN)
   type        String?
