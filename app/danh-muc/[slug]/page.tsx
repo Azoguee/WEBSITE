@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/db'
 import { CategoryPage } from '@/components/CategoryPage'
 import { Metadata } from 'next'
-import { Product } from '@/types'
+import { CategorySidebar } from '@/components/CategorySidebar'
 
 interface CategoryPageProps {
   params: {
@@ -37,18 +37,18 @@ async function getProducts(
 
   const where: {
     categoryId: string
-    status: string
-    price?: { gte?: number; lte?: number }
+    isActive: boolean
+    priceVnd?: { gte?: number; lte?: number }
     OR?: Array<{ name?: { contains: string }; description?: { contains: string }; sku?: { contains: string } }>
   } = {
     categoryId,
-    status: 'active',
+    isActive: true,
   }
 
   if (minPrice !== undefined || maxPrice !== undefined) {
-    where.price = {}
-    if (minPrice !== undefined) where.price.gte = minPrice
-    if (maxPrice !== undefined) where.price.lte = maxPrice
+    where.priceVnd = {}
+    if (minPrice !== undefined) where.priceVnd.gte = minPrice
+    if (maxPrice !== undefined) where.priceVnd.lte = maxPrice
   }
 
   if (search) {
@@ -59,13 +59,13 @@ async function getProducts(
     ]
   }
 
-  const orderBy: { price?: 'asc' | 'desc'; name?: 'asc' | 'desc'; createdAt?: 'asc' | 'desc' } = {}
+  const orderBy: { priceVnd?: 'asc' | 'desc'; name?: 'asc' | 'desc'; createdAt?: 'asc' | 'desc' } = {}
   switch (sort) {
     case 'price_asc':
-      orderBy.price = 'asc'
+      orderBy.priceVnd = 'asc'
       break
     case 'price_desc':
-      orderBy.price = 'desc'
+      orderBy.priceVnd = 'desc'
       break
     case 'name':
       orderBy.name = 'asc'
@@ -111,12 +111,12 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   }
 
   return {
-    title: `${category.name} - Tài Khoản Siêu Rẻ`,
-    description: `Khám phá các sản phẩm ${category.name} với giá siêu rẻ. Chất lượng cao, bảo hành lâu dài.`,
+    title: `${category.name} - KyoSHOP`,
+    description: `Khám phá các sản phẩm ${category.name} chất lượng cao.`,
     keywords: `${category.name}, tài khoản premium, ${category.name} giá rẻ`,
     openGraph: {
-      title: `${category.name} - Tài Khoản Siêu Rẻ`,
-      description: `Khám phá các sản phẩm ${category.name} với giá siêu rẻ.`,
+      title: `${category.name} - KyoSHOP`,
+      description: `Khám phá các sản phẩm ${category.name} chất lượng cao.`,
     },
     alternates: {
       canonical: `/danh-muc/${params.slug}`,
@@ -147,11 +147,18 @@ export default async function CategoryPageComponent({ params, searchParams }: Ca
   )
 
   return (
-    <CategoryPage
-      category={category}
-      products={products}
-      pagination={pagination}
-      searchParams={searchParams}
-    />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <CategorySidebar />
+        <div className="lg:col-span-3">
+          <CategoryPage
+            category={category}
+            products={products}
+            pagination={pagination}
+            searchParams={searchParams}
+          />
+        </div>
+      </div>
+    </div>
   )
 }

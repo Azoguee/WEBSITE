@@ -3,16 +3,35 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { formatPrice } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   Users,
   MessageCircle,
   TrendingUp,
   DollarSign,
-  Download,
-  Search,
-  Trash2
+  MoreHorizontal,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface Lead {
   id: string
@@ -22,35 +41,47 @@ interface Lead {
   variant: string | null
   status: string
   createdAt: Date
-  product?: {
-    name: string
-  }
 }
 
 interface Analytics {
   summary: {
     totalLeads: number
     pendingLeads: number
-    contactedLeads: number
     successLeads: number
-    lostLeads: number
     totalRevenue: number
     conversionRate: number
-    contactRate: number
   }
 }
 
 interface AdminDashboardProps {
-    initialAnalytics: Analytics;
-    initialLeads: Lead[];
+  initialAnalytics: Analytics
+  initialLeads: Lead[]
 }
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(amount)
+}
+
+const AnalyticsCard = ({ icon: Icon, title, value }: { icon: React.ElementType, title: string, value: string }) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      <Icon className="h-4 w-4 text-muted-foreground" />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{value}</div>
+    </CardContent>
+  </Card>
+)
 
 export function AdminDashboard({ initialAnalytics, initialLeads }: AdminDashboardProps) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
   const [analytics, setAnalytics] = useState<Analytics | null>(initialAnalytics)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const fetchAnalytics = useCallback(async () => {
     try {
@@ -64,12 +95,9 @@ export function AdminDashboard({ initialAnalytics, initialLeads }: AdminDashboar
 
   const fetchLeads = useCallback(async () => {
     try {
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '20',
-      })
+      const params = new URLSearchParams()
       if (searchTerm) params.set('search', searchTerm)
-      if (statusFilter) params.set('status', statusFilter)
+      if (statusFilter !== 'all') params.set('status', statusFilter)
 
       const response = await fetch(`/api/leads?${params.toString()}`)
       const data = await response.json()
@@ -77,260 +105,165 @@ export function AdminDashboard({ initialAnalytics, initialLeads }: AdminDashboar
     } catch (error) {
       console.error('Error fetching leads:', error)
     }
-  }, [currentPage, searchTerm, statusFilter])
+  }, [searchTerm, statusFilter])
 
   useEffect(() => {
-    // Data is now fetched on the server, so we don't need to fetch it again on the client.
-    // We can still re-fetch data on the client if we need to, for example, when a filter changes.
-    if (searchTerm || statusFilter || currentPage > 1) {
-        fetchLeads();
-    }
-  }, [fetchLeads, searchTerm, statusFilter, currentPage]);
+    fetchLeads()
+  }, [fetchLeads])
 
   const updateLeadStatus = async (leadId: string, status: string) => {
     try {
-      const response = await fetch(`/api/leads/${leadId}`, {
+      await fetch(`/api/leads/${leadId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-
-      if (response.ok) {
-        fetchLeads()
-        fetchAnalytics()
-      }
+      fetchLeads()
+      fetchAnalytics()
     } catch (error) {
-      console.error('Error updating lead:', error)
+      console.error('Error updating lead status:', error)
     }
   }
 
   const deleteLead = async (leadId: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa lead này?')) return
-
-    try {
-      const response = await fetch(`/api/leads/${leadId}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
+    if (confirm('Are you sure you want to delete this lead?')) {
+      try {
+        await fetch(`/api/leads/${leadId}`, {
+          method: 'DELETE',
+        })
         fetchLeads()
         fetchAnalytics()
+      } catch (error) {
+        console.error('Error deleting lead:', error)
       }
-    } catch (error) {
-      console.error('Error deleting lead:', error)
     }
   }
 
-  const exportLeads = async () => {
-    try {
-      const response = await fetch('/api/leads/export')
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `leads-${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-    } catch (error) {
-      console.error('Error exporting leads:', error)
-    }
-  }
-
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending_chat': return 'bg-yellow-100 text-yellow-800'
-      case 'contacted': return 'bg-blue-100 text-blue-800'
       case 'success': return 'bg-green-100 text-green-800'
       case 'lost': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending_chat': return 'Chờ liên hệ'
-      case 'contacted': return 'Đã liên hệ'
-      case 'success': return 'Thành công'
-      case 'lost': return 'Mất khách'
-      default: return status
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">Quản lý leads và theo dõi hiệu suất</p>
-        </div>
-
-        {/* Analytics Cards */}
-        {analytics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <Users className="h-8 w-8 text-blue-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Tổng Leads</p>
-                    <p className="text-2xl font-bold text-gray-900">{analytics.summary.totalLeads}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <MessageCircle className="h-8 w-8 text-yellow-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Chờ liên hệ</p>
-                    <p className="text-2xl font-bold text-gray-900">{analytics.summary.pendingLeads}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <TrendingUp className="h-8 w-8 text-green-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Tỷ lệ chuyển đổi</p>
-                    <p className="text-2xl font-bold text-gray-900">{analytics.summary.conversionRate}%</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <DollarSign className="h-8 w-8 text-purple-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
-                    <p className="text-2xl font-bold text-gray-900">{formatPrice(analytics.summary.totalRevenue)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+    <div className="flex min-h-screen w-full bg-muted/40">
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 w-full">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+            <AnalyticsCard
+              title="Tổng doanh thu"
+              value={formatCurrency(analytics?.summary.totalRevenue || 0)}
+              icon={DollarSign}
+            />
+            <AnalyticsCard
+              title="Leads thành công"
+              value={`+${analytics?.summary.successLeads || 0}`}
+              icon={Users}
+            />
+            <AnalyticsCard
+              title="Tỷ lệ chuyển đổi"
+              value={`${analytics?.summary.conversionRate || 0}%`}
+              icon={TrendingUp}
+            />
+            <AnalyticsCard
+              title="Chờ liên hệ"
+              value={`${analytics?.summary.pendingLeads || 0}`}
+              icon={MessageCircle}
+            />
           </div>
-        )}
-
-        {/* Leads Table */}
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Danh sách Leads</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={exportLeads}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Export CSV
-                </Button>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Leads</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Quản lý và theo dõi tất cả leads.
+                </p>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* Filters */}
-            <div className="flex gap-4 mb-6">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Tìm kiếm leads..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Tìm kiếm..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                />
+                <Select onValueChange={setStatusFilter} defaultValue="all">
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Trạng thái" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả</SelectItem>
+                    <SelectItem value="pending_chat">Chờ liên hệ</SelectItem>
+                    <SelectItem value="success">Thành công</SelectItem>
+                    <SelectItem value="lost">Mất khách</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="pending_chat">Chờ liên hệ</option>
-                <option value="contacted">Đã liên hệ</option>
-                <option value="success">Thành công</option>
-                <option value="lost">Mất khách</option>
-              </select>
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4">Order Ref</th>
-                    <th className="text-left py-3 px-4">Sản phẩm</th>
-                    <th className="text-left py-3 px-4">Giá</th>
-                    <th className="text-left py-3 px-4">Trạng thái</th>
-                    <th className="text-left py-3 px-4">Ngày tạo</th>
-                    <th className="text-left py-3 px-4">Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order Ref</TableHead>
+                    <TableHead>Sản phẩm</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead>Giá</TableHead>
+                    <TableHead>Ngày tạo</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {leads.map((lead) => (
-                    <tr key={lead.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 font-mono text-sm">{lead.orderRef}</td>
-                      <td className="py-3 px-4">
-                        <div>
-                          <div className="font-medium">{lead.productName}</div>
-                          {lead.variant && (
-                            <div className="text-sm text-gray-500">{lead.variant}</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 font-medium">{formatPrice(lead.price)}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(lead.status)}`}>
-                          {getStatusText(lead.status)}
+                    <TableRow key={lead.id}>
+                      <TableCell className="font-medium">{lead.orderRef}</TableCell>
+                      <TableCell>{lead.productName}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(lead.status)}`}
+                        >
+                          {lead.status}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-500">
+                      </TableCell>
+                      <TableCell>{formatCurrency(lead.price)}</TableCell>
+                      <TableCell>
                         {new Date(lead.createdAt).toLocaleDateString('vi-VN')}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-2">
-                          <select
-                            value={lead.status}
-                            onChange={(e) => updateLeadStatus(lead.id, e.target.value)}
-                            className="text-xs border border-gray-300 rounded px-2 py-1"
-                          >
-                            <option value="pending_chat">Chờ liên hệ</option>
-                            <option value="contacted">Đã liên hệ</option>
-                            <option value="success">Thành công</option>
-                            <option value="lost">Mất khách</option>
-                          </select>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => deleteLead(lead.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-haspopup="true"
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => updateLeadStatus(lead.id, 'success')}>
+                              Đánh dấu thành công
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateLeadStatus(lead.id, 'lost')}>
+                              Đánh dấu mất khách
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => deleteLead(lead.id)}>
+                              Xóa
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-
-            {leads.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">Không có leads nào</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </main>
       </div>
     </div>
   )

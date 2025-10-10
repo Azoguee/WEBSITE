@@ -3,83 +3,59 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Menu, X, Search, MessageCircle, Phone } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Menu, X, Search, ShoppingCart, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface HeaderProps {
-  categories?: Array<{
-    id: string
-    name: string
-    slug: string
-  }>
-}
-
-export function Header({ categories = [] }: HeaderProps) {
+export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
+
+  const navLinks = [
+    { href: '/', label: 'Trang chủ' },
+    { href: '/danh-muc', label: 'Danh mục' },
+    { href: '/khuyen-mai', label: 'Khuyến mãi' },
+    { href: '/lien-he', label: 'Liên hệ' },
+  ]
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-2xl font-bold text-primary-600">
-              Tài Khoản Siêu Rẻ
+            <span className="text-3xl font-bold text-primary-600">
+              KyoSHOP
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-primary-600 transition-colors">
-              Trang chủ
-            </Link>
-            
-            {categories.map((category) => (
+          <nav className="hidden lg:flex items-center space-x-8">
+            {navLinks.map((link) => (
               <Link
-                key={category.id}
-                href={`/danh-muc/${category.slug}`}
-                className="text-gray-700 hover:text-primary-600 transition-colors"
+                key={link.href}
+                href={link.href}
+                className="text-lg font-medium text-gray-700 hover:text-primary-600 transition-colors"
               >
-                {category.name}
+                {link.label}
               </Link>
             ))}
-            
-            <Link href="/lien-he" className="text-gray-700 hover:text-primary-600 transition-colors">
-              Liên hệ
-            </Link>
           </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-            >
-              <Search className="w-4 h-4" />
+          {/* Search, Cart, Account */}
+          <div className="hidden lg:flex items-center space-x-4">
+            <div className="relative">
+              <Input
+                type="search"
+                placeholder="Tìm kiếm..."
+                className="pr-10"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            </div>
+            <Button variant="ghost" size="icon">
+              <ShoppingCart className="w-6 h-6" />
             </Button>
-            
-            <Button
-              variant="zalo"
-              size="sm"
-              asChild
-            >
-              <a href="https://zalo.me/your-zalo" target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Chat Zalo
-              </a>
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-            >
-              <a href="tel:0123456789">
-                <Phone className="w-4 h-4 mr-2" />
-                Hotline
-              </a>
+            <Button variant="ghost" size="icon">
+              <User className="w-6 h-6" />
             </Button>
           </div>
 
@@ -87,92 +63,49 @@ export function Header({ categories = [] }: HeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="lg:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
           </Button>
         </div>
+      </div>
 
-        {/* Search Bar */}
-        {isSearchOpen && (
-          <div className="py-4 border-t">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Tìm kiếm sản phẩm..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-              >
-                <Search className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+      {/* Mobile Navigation */}
+      <div
+        className={cn(
+          'lg:hidden overflow-hidden transition-all duration-300 ease-in-out',
+          isMenuOpen ? 'max-h-screen py-4 border-t' : 'max-h-0'
         )}
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden border-t">
-            <nav className="py-4 space-y-4">
-              <Link
-                href="/"
-                className="block text-gray-700 hover:text-primary-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Trang chủ
-              </Link>
-              
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/danh-muc/${category.slug}`}
-                  className="block text-gray-700 hover:text-primary-600 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {category.name}
-                </Link>
-              ))}
-              
-              <Link
-                href="/lien-he"
-                className="block text-gray-700 hover:text-primary-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Liên hệ
-              </Link>
-              
-              <div className="pt-4 space-y-2">
-                <Button
-                  variant="zalo"
-                  size="sm"
-                  className="w-full"
-                  asChild
-                >
-                  <a href="https://zalo.me/your-zalo" target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Chat Zalo
-                  </a>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  asChild
-                >
-                  <a href="tel:0123456789">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Hotline
-                  </a>
-                </Button>
-              </div>
-            </nav>
+      >
+        <nav className="flex flex-col space-y-4 px-4">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-lg font-medium text-gray-700 hover:text-primary-600 transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <div className="relative pt-4">
+            <Input
+              type="search"
+              placeholder="Tìm kiếm..."
+              className="pr-10"
+            />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
-        )}
+          <div className="flex items-center justify-center space-x-4 pt-4">
+            <Button variant="ghost" size="icon">
+              <ShoppingCart className="w-7 h-7" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <User className="w-7 h-7" />
+            </Button>
+          </div>
+        </nav>
       </div>
     </header>
   )

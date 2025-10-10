@@ -55,14 +55,14 @@ export async function generateMetadata({
     }
   }
 
-  const description = `Mua ${product.name} với giá siêu rẻ. ${product.priceNote || ''}. Chất lượng cao, bảo hành lâu dài.`
+  const description = `Mua ${product.name} với giá tốt nhất. ${product.priceNote || ''}. Chất lượng cao, bảo hành uy tín.`
 
   return {
-    title: `${product.name} - Tài Khoản Siêu Rẻ`,
+    title: `${product.name} - KyoSHOP`,
     description: description,
     keywords: `${product.name}, tài khoản premium, ${product.category?.name}`,
     openGraph: {
-      title: `${product.name} - Tài Khoản Siêu Rẻ`,
+      title: `${product.name} - KyoSHOP`,
       description: description,
     },
     alternates: {
