@@ -8,7 +8,8 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface ProductCardProps {
-  product: Product
+  product: Product;
+  onBuyClick?: (product: Product) => void;
 }
 
 const formatCurrency = (amount: number) => {
@@ -36,7 +37,7 @@ const StarRating = ({ rating }: { rating: number }) => {
   )
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, onBuyClick }: ProductCardProps) {
   const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK'
   const linkHref = product.sku ? `/san-pham/${product.sku}` : '#'
 
@@ -94,6 +95,7 @@ export function ProductCard({ product }: ProductCardProps) {
           size="sm"
           className="w-full"
           disabled={isOutOfStock}
+          onClick={() => onBuyClick && onBuyClick(product)}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
           {isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ'}

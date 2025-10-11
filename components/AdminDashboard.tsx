@@ -54,7 +54,7 @@ interface Analytics {
 }
 
 interface AdminDashboardProps {
-  initialAnalytics: Analytics
+  initialAnalytics: Analytics | null
   initialLeads: Lead[]
 }
 

@@ -46,6 +46,9 @@ async function getLeads() {
 }
 
 export async function AdminDashboardData() {
+  if (process.env.NODE_ENV === 'production') {
+    return <AdminDashboard initialAnalytics={null} initialLeads={[]} />;
+  }
   const analytics = await getAnalytics();
   const leads = await getLeads();
 
