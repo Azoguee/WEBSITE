@@ -4,10 +4,15 @@ export interface Product {
   id: string;
   name: string;
   priceVnd: number | null;
+  oldPrice: number | null;
+  discount: string | null;
   priceNote: string | null;
+  rating: number | null;
   stockStatus: PrismaStockStatus;
   type: string | null;
   sku: string | null;
+  images?: string[];
+  description: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
