@@ -47,7 +47,7 @@ const StarRating = ({ rating, reviewCount }: { rating: number, reviewCount?: num
 export function ProductDetail({ product, relatedProducts }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState('description')
-  const [activeImage, setActiveImage] = useState(product.images?.[0] || null)
+  const [activeImage, setActiveImage] = useState(product.images ? product.images.split(',')[0] : null)
 
   const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK'
 
@@ -72,7 +72,7 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
             )}
           </div>
           <div className="grid grid-cols-5 gap-2">
-            {product.images?.map((image, index) => (
+            {product.images?.split(',').map((image, index) => (
               <button
                 key={index}
                 className={cn(
