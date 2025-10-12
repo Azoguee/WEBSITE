@@ -15,7 +15,7 @@ describe('POST /api/admin/catalog/import', () => {
     const response = await POST(req);
     const body = await response.json();
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(415);
     expect(body.error).toBe('Invalid file type. Please upload a CSV file.');
   });
 });

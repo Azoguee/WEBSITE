@@ -13,7 +13,7 @@ const parseCsv = (buffer: Buffer): Promise<any[]> => {
     readableStream.push(null); // End the stream
 
     readableStream
-      .pipe(csv())
+      .pipe(csv({ skipLines: 2 }))
       .on('data', (data: any) => results.push(data))
       .on('end', () => resolve(results))
       .on('error', (error: any) => reject(error));
@@ -29,10 +29,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'File is required.' }, { status: 400 });
     }
 
-    if (file.type !== 'text/csv') {
+    if (!file.type.includes('csv') && file.type !== 'application/vnd.ms-excel') {
       return NextResponse.json(
         { error: 'Invalid file type. Please upload a CSV file.' },
-        { status: 400 },
+        { status: 415 },
       );
     }
 
@@ -51,6 +51,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         data: normalizedProducts,
       });
     } else {
+      if (!process.env.DATABASE_URL) {
+        return NextResponse.json(
+          { error: 'Database connection is not available.', code: 503 },
+          { status: 503 },
+        );
+      }
       const syncResult = await syncProductsToDb(normalizedProducts, deactivateMissing);
       return NextResponse.json({
         message: 'Import successful.',
