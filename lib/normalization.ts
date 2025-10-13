@@ -1,4 +1,5 @@
 import { StockStatus } from '@prisma/client';
+import { ProductDomain, ProductDTO } from '@/types';
 
 export interface NormalizedProduct {
   name: string;
@@ -81,6 +82,16 @@ export function normalizeCsvRow(row: { [key: string]: string }, normalizedHeader
   }
 
   return normalizedRow as NormalizedProduct;
+}
+
+export function toProductDTO(product: ProductDomain): ProductDTO {
+  const { createdAt, updatedAt, ...rest } = product;
+  return {
+    ...rest,
+    images: product.images ? product.images.split(',') : [],
+    createdAt: createdAt.toISOString(),
+    updatedAt: updatedAt.toISOString(),
+  };
 }
 
 export function normalizeCsvData(data: { [key: string]: string }[]): NormalizedProduct[] {

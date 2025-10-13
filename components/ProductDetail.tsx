@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Product, Category } from '@/types'
+import { ProductDTO, Category } from '@/types'
 import { Button } from '@/components/ui/button'
 import { ProductCard } from '@/components/ProductCard'
 import { Star, Shield, Truck, CheckCircle, ShoppingCart, Zap, Image as ImageIcon } from 'lucide-react'
@@ -10,8 +10,8 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface ProductDetailProps {
-  product: Product & { category?: Category | null }
-  relatedProducts: Product[]
+  product: ProductDTO
+  relatedProducts: ProductDTO[]
 }
 
 const formatCurrency = (amount: number) => {

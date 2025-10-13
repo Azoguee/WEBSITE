@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { ProductDetail } from '@/components/ProductDetail'
 import { Metadata } from 'next'
-import { Product } from '@/types'
+import { Product, ProductDTO } from '@/types'
 
 interface ProductPageProps {
   params: {
@@ -10,20 +10,26 @@ interface ProductPageProps {
   }
 }
 
+import { toProductDTO } from '@/lib/normalization';
+
 // The 'slug' parameter is now treated as the SKU
 async function getProduct(sku: string) {
-  return await prisma.product.findUnique({
+  const product = await prisma.product.findUnique({
     where: { sku },
     include: {
       category: true,
     },
-  })
+  });
+  if (!product) {
+    return null;
+  }
+  return toProductDTO(product);
 }
 
 async function getRelatedProducts(
   categoryId: string | null,
   productId: string
-): Promise<Product[]> {
+): Promise<ProductDTO[]> {
   if (!categoryId) {
     return []
   }
@@ -40,8 +46,8 @@ async function getRelatedProducts(
     orderBy: {
       createdAt: 'desc',
     },
-  })
-  return products as Product[] // Cast to the correct type from types/index.ts
+  });
+  return products.map(toProductDTO);
 }
 
 export async function generateMetadata({
@@ -86,7 +92,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ProductDetail product={product as Product} relatedProducts={relatedProducts} />
+      <ProductDetail product={product} relatedProducts={relatedProducts} />
     </div>
   )
 }
