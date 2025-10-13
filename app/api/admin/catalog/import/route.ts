@@ -41,9 +41,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const deactivateMissing = searchParams.get('deactivateMissing') === 'true';
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const results = await parseCsv(fileBuffer);
 
-    const normalizedProducts = normalizeCsvData(results);
+    let results;
+    try {
+      results = await parseCsv(fileBuffer);
+    } catch (error: any) {
+      console.error('Error parsing CSV file:', error);
+      return NextResponse.json({ error: 'Failed to parse CSV file.', details: error.message }, { status: 400 });
+    }
+
+    let normalizedProducts;
+    try {
+      normalizedProducts = normalizeCsvData(results);
+    } catch (error: any) {
+      console.error('Error normalizing CSV data:', error);
+      return NextResponse.json({ error: 'Failed to normalize CSV data.', details: error.message }, { status: 400 });
+    }
 
     if (mode === 'dry-run') {
       return NextResponse.json({
@@ -51,11 +64,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         data: normalizedProducts,
       });
     } else {
-      const syncResult = await syncProductsToDb(normalizedProducts, deactivateMissing);
-      return NextResponse.json({
-        message: 'Import successful.',
-        ...syncResult,
-      });
+      try {
+        const syncResult = await syncProductsToDb(normalizedProducts, deactivateMissing);
+        return NextResponse.json({
+          message: 'Import successful.',
+          ...syncResult,
+        });
+      } catch (error: any) {
+        console.error('Error syncing products to database:', error);
+        return NextResponse.json({ error: 'Failed to sync products to database.', details: error.message }, { status: 500 });
+      }
     }
   } catch (error: any) {
     console.error('Error in POST /api/admin/catalog/import:', error);
