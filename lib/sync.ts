@@ -1,88 +1,159 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, StockStatus } from '@prisma/client';
 import { NormalizedProduct } from './normalization';
 
 const prisma = new PrismaClient();
 
+// A simple slug generation function
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+}
+
 export async function syncProductsToDb(
   normalizedProducts: NormalizedProduct[],
-  deactivateMissing: boolean = false
+  deactivateMissing: boolean = false,
 ) {
-  // Get all SKUs from the CSV that are not null/empty
-  const allSkusInCsv = new Set(
-    normalizedProducts.map(p => p.sku).filter((sku): sku is string => !!sku)
+  const syncResult = await prisma.$transaction(
+    async (tx) => {
+      // 1. Upsert all categories in one batch to get their IDs
+      const categoryNames = [
+        ...new Set(
+          normalizedProducts
+            .map((p) => p.category)
+            .filter((c): c is string => !!c),
+        ),
+      ];
+      const categoryMap = new Map<string, string>();
+
+      if (categoryNames.length > 0) {
+        await tx.category.createMany({
+          data: categoryNames.map((name) => ({ name })),
+          skipDuplicates: true,
+        });
+
+        const categories = await tx.category.findMany({
+          where: { name: { in: categoryNames } },
+        });
+
+        for (const category of categories) {
+          categoryMap.set(category.name, category.id);
+        }
+      }
+
+      // 2. Find all existing products by SKU or by name+category
+      const skusToFind = normalizedProducts
+        .map((p) => p.sku)
+        .filter((sku): sku is string => !!sku);
+
+      const nameCatPairsToFind = normalizedProducts
+        .filter((p) => !p.sku && p.category)
+        .map((p) => ({
+          name: p.name,
+          categoryId: categoryMap.get(p.category as string)!,
+        }));
+
+      const existingProducts = await tx.product.findMany({
+        where: {
+          OR: [
+            { sku: { in: skusToFind } },
+            ...nameCatPairsToFind,
+          ],
+        },
+      });
+
+      const existingProductMapBySku = new Map<string, (typeof existingProducts)[0]>();
+      const existingProductMapByNameCat = new Map< string, (typeof existingProducts)[0]>();
+
+      for (const p of existingProducts) {
+        if (p.sku) {
+          existingProductMapBySku.set(p.sku, p);
+        }
+        if (p.categoryId) {
+          existingProductMapByNameCat.set(`${p.name}_${p.categoryId}`, p);
+        }
+      }
+
+      // 3. Separate products into "to create" and "to update"
+      const productsToCreate: Prisma.ProductCreateManyInput[] = [];
+      const updatePromises: Promise<any>[] = [];
+
+      for (const productData of normalizedProducts) {
+        const categoryId = productData.category
+          ? categoryMap.get(productData.category)
+          : null;
+
+        let existingProduct;
+        if (productData.sku) {
+          existingProduct = existingProductMapBySku.get(productData.sku);
+        } else if (categoryId) {
+          existingProduct = existingProductMapByNameCat.get(
+            `${productData.name}_${categoryId}`,
+          );
+        }
+
+        const dataForDb = {
+          name: productData.name,
+          slug: generateSlug(productData.name),
+          priceVnd: productData.priceVnd,
+          priceNote: productData.priceNote,
+          stockStatus: productData.stockStatus,
+          type: productData.type,
+          sku: productData.sku || null,
+          isActive: true,
+          categoryId: categoryId,
+        };
+
+        if (existingProduct) {
+          updatePromises.push(
+            tx.product.update({
+              where: { id: existingProduct.id },
+              data: dataForDb,
+            }),
+          );
+        } else {
+          productsToCreate.push(dataForDb);
+        }
+      }
+
+      // 4. Execute batch operations
+      if (productsToCreate.length > 0) {
+        await tx.product.createMany({ data: productsToCreate });
+      }
+
+      await Promise.all(updatePromises);
+      console.log(`Created ${productsToCreate.length} products, updated ${updatePromises.length} products.`);
+
+
+      // 5. Deactivate missing products
+      let deactivatedCount = 0;
+      if (deactivateMissing) {
+        const allSkusInCsv = new Set(skusToFind);
+        const result = await tx.product.updateMany({
+          where: {
+            sku: {
+              notIn: Array.from(allSkusInCsv),
+              not: null,
+            },
+          },
+          data: { isActive: false },
+        });
+        deactivatedCount = result.count;
+        console.log(`Deactivated ${deactivatedCount} products not in the CSV.`);
+      }
+
+      return {
+        createdCount: productsToCreate.length,
+        updatedCount: updatePromises.length,
+        deactivatedCount,
+      };
+    },
+    {
+      maxWait: 10000, // default: 2000
+      timeout: 20000, // default: 5000
+    },
   );
 
-  for (const productData of normalizedProducts) {
-    // 1. Upsert Category and get its ID
-    let categoryId: string | null = null;
-    if (productData.category) {
-      const category = await prisma.category.upsert({
-        where: { name: productData.category },
-        update: { name: productData.category },
-        create: { name: productData.category },
-      });
-      categoryId = category.id;
-    }
-
-    // 2. Prepare product data for create/update
-    const dataForDb = {
-      name: productData.name,
-      priceVnd: productData.priceVnd,
-      priceNote: productData.priceNote,
-      stockStatus: productData.stockStatus,
-      type: productData.type,
-      sku: productData.sku || null,
-      isActive: true,
-      categoryId: categoryId,
-    };
-
-    // 3. Find existing product based on SKU or name+category
-    let existingProduct;
-    if (dataForDb.sku) {
-      existingProduct = await prisma.product.findUnique({
-        where: { sku: dataForDb.sku },
-      });
-    } else {
-      existingProduct = await prisma.product.findFirst({
-        where: {
-          name: dataForDb.name,
-          categoryId: categoryId,
-        },
-      });
-    }
-
-    // 4. Create or Update the product
-    if (existingProduct) {
-      await prisma.product.update({
-        where: { id: existingProduct.id },
-        data: dataForDb,
-      });
-      console.log(`Updated product: ${dataForDb.name}`);
-    } else {
-      await prisma.product.create({
-        data: dataForDb,
-      });
-      console.log(`Created product: ${dataForDb.name}`);
-    }
-  }
-
-  // 5. Deactivate missing products (if flag is set)
-  let deactivatedCount = 0;
-  if (deactivateMissing) {
-    const result = await prisma.product.updateMany({
-      where: {
-        sku: {
-          notIn: Array.from(allSkusInCsv),
-          not: null, // Correctly check for non-null SKUs
-        },
-      },
-      data: {
-        isActive: false,
-      },
-    });
-    deactivatedCount = result.count;
-    console.log(`Deactivated ${deactivatedCount} products not in the CSV.`);
-  }
-
-  return { deactivatedCount };
+  return { deactivatedCount: syncResult.deactivatedCount };
 }

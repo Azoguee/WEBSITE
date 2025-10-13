@@ -29,6 +29,7 @@ model Category {
 model Product {
   id          String      @id @default(cuid())
   name        String
+  slug        String      @unique
   description String?
   images      String[]
   priceVnd    Int?
@@ -47,6 +48,7 @@ model Product {
   leads       Lead[]
 
   @@unique([name, categoryId], name: "name_categoryId_unique")
+  @@index([slug])
   @@index([stockStatus, isActive])
   @@index([categoryId])
   @@map("products")
@@ -118,4 +120,27 @@ model Setting {
   type  String @default("string") // string, number, boolean, json
 
   @@map("settings")
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  email       String?   @unique
+  phone       String?   @unique
+  name        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email])
+  @@index([phone])
+  @@map("customers")
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@map("orders")
 }
