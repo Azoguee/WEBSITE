@@ -4,20 +4,55 @@ export interface Product {
   id: string;
   name: string;
   priceVnd: number | null;
-  oldPrice: number | null;
-  discount: string | null;
   priceNote: string | null;
-  rating: number | null;
   stockStatus: PrismaStockStatus;
   type: string | null;
-  images: string | null;
-  description: string | null;
   sku: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
   categoryId: string | null;
   category?: Category | null;
+}
+
+export interface ProductDomain {
+  id: string;
+  name: string;
+  priceVnd: number | null;
+  oldPrice: number | null;
+  discount: string | null;
+  priceNote: string | null;
+  rating: number | null;
+  stockStatus: PrismaStockStatus;
+  type: string | null;
+  sku: string | null;
+  images: string | null;
+  description: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  categoryId: string | null;
+  category?: { id: string; name: string } | null;
+}
+
+export interface ProductDTO {
+  id: string;
+  name: string;
+  priceVnd: number | null;
+  oldPrice: number | null;
+  discount: string | null;
+  priceNote: string | null;
+  rating: number | null;
+  stockStatus: PrismaStockStatus;
+  type: string | null;
+  sku: string | null;
+  images: string[];
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  categoryId: string | null;
+  category?: { id: string; name: string } | null;
 }
 
 export interface Category {

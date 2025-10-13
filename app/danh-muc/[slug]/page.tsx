@@ -24,6 +24,8 @@ async function getCategory(slug: string) {
   })
 }
 
+import { toProductDTO } from '@/lib/normalization';
+
 async function getProducts(
   categoryId: string,
   page: number = 1,
@@ -77,7 +79,7 @@ async function getProducts(
       orderBy.createdAt = 'desc'
   }
 
-  const [products, total] = await Promise.all([
+  const [productsFromDb, total] = await Promise.all([
     prisma.product.findMany({
       where,
       include: {
@@ -89,6 +91,8 @@ async function getProducts(
     }),
     prisma.product.count({ where }),
   ])
+
+  const products = productsFromDb.map(toProductDTO);
 
   return {
     products: products,

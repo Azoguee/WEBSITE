@@ -1,15 +1,16 @@
 'use client'
 
-import { Product } from '@/types'
+import { ProductDTO } from '@/types'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ShoppingCart, Star, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 interface ProductCardProps {
-  product: Product;
-  onBuyClick?: (product: Product) => void;
+  product: ProductDTO;
+  onBuyClick?: (product: ProductDTO) => void;
 }
 
 const formatCurrency = (amount: number) => {
@@ -37,7 +38,7 @@ const StarRating = ({ rating }: { rating: number }) => {
   )
 }
 
-export function ProductCard({ product, onBuyClick }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
   const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK'
   const linkHref = product.sku ? `/san-pham/${product.sku}` : '#'
 
@@ -46,9 +47,19 @@ export function ProductCard({ product, onBuyClick }: ProductCardProps) {
       <Link href={linkHref} className="flex-shrink-0">
         <CardHeader className="p-0">
           <div className="relative aspect-w-1 aspect-h-1 w-full overflow-hidden">
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-              <ImageIcon className="w-12 h-12 text-gray-300" />
-            </div>
+            {product.images && product.images.length > 0 ? (
+              <Image
+                src={product.images[0]}
+                alt={product.name}
+                width={300}
+                height={300}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                <ImageIcon className="w-12 h-12 text-gray-300" />
+              </div>
+            )}
             {product.discount && (
               <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
                 {product.discount}
@@ -95,7 +106,6 @@ export function ProductCard({ product, onBuyClick }: ProductCardProps) {
           size="sm"
           className="w-full"
           disabled={isOutOfStock}
-          onClick={() => onBuyClick && onBuyClick(product)}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
           {isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ'}

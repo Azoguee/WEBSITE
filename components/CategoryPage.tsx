@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Product } from '@/types'
+import { ProductDTO } from '@/types'
 import { ProductCard } from '@/components/ProductCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,7 +13,7 @@ interface CategoryPageProps {
     id: string
     name: string
   }
-  products: Product[]
+  products: ProductDTO[]
   pagination: {
     page: number
     limit: number
@@ -69,7 +69,7 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
     router.push(`/danh-muc/${category.name}?${params.toString()}`)
   }
 
-  const handleBuyClick = (product: Product) => {
+  const handleBuyClick = (product: ProductDTO) => {
     // This will be handled by client-side JavaScript
     console.log('Buy clicked:', product)
   }
@@ -223,7 +223,7 @@ export function CategoryPage({ category, products, pagination, searchParams }: C
               ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
               : 'grid-cols-1'
           }`}>
-            {products.map((product: Product) => (
+            {products.map((product: ProductDTO) => (
               <ProductCard
                 key={product.id}
                 product={product}

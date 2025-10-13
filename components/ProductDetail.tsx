@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Product, Category } from '@/types'
+import { ProductDTO, Category } from '@/types'
 import { Button } from '@/components/ui/button'
 import { ProductCard } from '@/components/ProductCard'
 import { Star, Shield, Truck, CheckCircle, ShoppingCart, Zap, Image as ImageIcon } from 'lucide-react'
@@ -10,8 +10,8 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface ProductDetailProps {
-  product: Product & { category?: Category | null }
-  relatedProducts: Product[]
+  product: ProductDTO
+  relatedProducts: ProductDTO[]
 }
 
 const formatCurrency = (amount: number) => {
@@ -47,7 +47,7 @@ const StarRating = ({ rating, reviewCount }: { rating: number, reviewCount?: num
 export function ProductDetail({ product, relatedProducts }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState('description')
-  const [activeImage, setActiveImage] = useState(product.images ? product.images.split(',')[0] : null)
+  const [activeImage, setActiveImage] = useState(product.images?.[0] || null)
 
   const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK'
 
@@ -72,7 +72,7 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
             )}
           </div>
           <div className="grid grid-cols-5 gap-2">
-            {product.images?.split(',').map((image, index) => (
+            {product.images?.map((image, index) => (
               <button
                 key={index}
                 className={cn(

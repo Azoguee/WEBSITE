@@ -1,12 +1,13 @@
 import { prisma } from '@/lib/db'
 import { ProductCard } from '@/components/ProductCard'
-import { Product } from '@/types'
+import { Product, ProductDTO } from '@/types'
+import { toProductDTO } from '@/lib/normalization'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-async function getFeaturedProducts(): Promise<Product[]> {
+async function getFeaturedProducts(): Promise<ProductDTO[]> {
   try {
     const products = await prisma.product.findMany({
       where: { isActive: true },
@@ -14,7 +15,7 @@ async function getFeaturedProducts(): Promise<Product[]> {
       take: 8,
       orderBy: { createdAt: 'desc' },
     })
-    return products as Product[]
+    return products.map(toProductDTO)
   } catch (error) {
     console.error('Failed to fetch featured products:', error)
     return []
@@ -56,7 +57,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProducts.map((product: Product) => (
+            {featuredProducts.map((product: ProductDTO) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

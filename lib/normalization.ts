@@ -1,4 +1,5 @@
 import { StockStatus } from '@prisma/client';
+import { ProductDomain, ProductDTO } from '@/types';
 
 export interface NormalizedProduct {
   name: string;
@@ -15,7 +16,6 @@ const headerMapping: { [key: string]: keyof NormalizedProduct } = {
   'tên': 'name',
   'tên sản phẩm': 'name',
   'name': 'name',
-  'sản phẩm': 'name',
   'giá': 'priceVnd',
   'price': 'priceVnd',
   'ghi chú giá': 'priceNote',
@@ -44,25 +44,18 @@ function parsePrice(priceStr: string | null | undefined): { priceVnd: number | n
 
 function inferStockStatus(row: { [key: string]: string }): StockStatus {
     for (const key in row) {
-        const value = row[key];
-        if (value) {
-            const lowerValue = value.toLowerCase();
-            if (lowerValue.includes('hết hàng')) {
-                return StockStatus.OUT_OF_STOCK;
-            }
-            if (lowerValue.includes('còn hàng')) {
-                return StockStatus.IN_STOCK;
-            }
+        const value = row[key].toLowerCase();
+        if (value.includes('hết hàng')) {
+            return StockStatus.OUT_OF_STOCK;
+        }
+        if (value.includes('còn hàng')) {
+            return StockStatus.IN_STOCK;
         }
     }
     return StockStatus.UNKNOWN;
 }
 
-export function normalizeCsvRow(row: { [key: string]: string }, normalizedHeaders: (keyof NormalizedProduct | null)[]): NormalizedProduct | null {
-  if (Object.values(row).every(value => !value)) {
-    return null;
-  }
-
+export function normalizeCsvRow(row: { [key: string]: string }, normalizedHeaders: (keyof NormalizedProduct | null)[]): NormalizedProduct {
   const headers = Object.keys(row);
   const normalizedRow: Partial<NormalizedProduct> = { isActive: true };
 
@@ -85,16 +78,20 @@ export function normalizeCsvRow(row: { [key: string]: string }, normalizedHeader
   normalizedRow.stockStatus = inferStockStatus(row);
 
   if (!normalizedRow.name) {
-    if (Object.values(row).some(value => value)) {
-      // It's a row with data, but the name is missing.
-      // Depending on requirements, you might want to throw an error
-      // or just skip this row. For now, let's skip it.
-      return null;
-    }
-    return null; // It's just an empty/header row
+    throw new Error('Row is missing a name.');
   }
 
   return normalizedRow as NormalizedProduct;
+}
+
+export function toProductDTO(product: ProductDomain): ProductDTO {
+  const { createdAt, updatedAt, ...rest } = product;
+  return {
+    ...rest,
+    images: product.images ? product.images.split(',') : [],
+    createdAt: createdAt.toISOString(),
+    updatedAt: updatedAt.toISOString(),
+  };
 }
 
 export function normalizeCsvData(data: { [key: string]: string }[]): NormalizedProduct[] {
@@ -103,5 +100,5 @@ export function normalizeCsvData(data: { [key: string]: string }[]): NormalizedP
     }
     const headers = Object.keys(data[0]);
     const normalizedHeaders = normalizeHeaders(headers);
-    return data.map(row => normalizeCsvRow(row, normalizedHeaders)).filter((row): row is NormalizedProduct => row !== null);
+    return data.map(row => normalizeCsvRow(row, normalizedHeaders));
 }
