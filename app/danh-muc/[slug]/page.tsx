@@ -83,7 +83,12 @@ async function getProducts(
     prisma.product.findMany({
       where,
       include: {
-        category: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy,
       skip,
