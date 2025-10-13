@@ -88,10 +88,12 @@ model AdminUser {
   email     String   @unique
   name      String
   password  String
-  role      String   @default("admin") // admin, super_admin
+  role      String   @default("Staff")
   isActive  Boolean  @default(true)
+  refreshToken String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  auditLogs AuditLog[]
 
   @@map("admin_users")
 }
@@ -118,4 +120,40 @@ model Setting {
   type  String @default("string") // string, number, boolean, json
 
   @@map("settings")
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  email       String?   @unique
+  phone       String?   @unique
+  name        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email])
+  @@index([phone])
+  @@map("customers")
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@map("orders")
+}
+
+model AuditLog {
+  id           String    @id @default(cuid())
+  adminUserId  String?
+  action       String
+  resourceType String?
+  resourceId   String?
+  details      Json?
+  createdAt    DateTime  @default(now())
+  adminUser    AdminUser? @relation(fields: [adminUserId], references: [id])
+
+  @@map("audit_logs")
 }
