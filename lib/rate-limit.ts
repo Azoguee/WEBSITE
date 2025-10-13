@@ -1,5 +1,3 @@
-import { NextRequest } from 'next/server'
-
 // Simple in-memory rate limiting (use Redis in production)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 

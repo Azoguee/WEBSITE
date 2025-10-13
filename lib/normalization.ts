@@ -16,7 +16,6 @@ const headerMapping: { [key: string]: keyof NormalizedProduct } = {
   'tên': 'name',
   'tên sản phẩm': 'name',
   'name': 'name',
-  'name_normalized': 'name',
   'giá': 'priceVnd',
   'price': 'priceVnd',
   'ghi chú giá': 'priceNote',
@@ -56,16 +55,13 @@ function inferStockStatus(row: { [key: string]: string }): StockStatus {
     return StockStatus.UNKNOWN;
 }
 
-export function normalizeCsvRow(
-  row: { [key: string]: string },
-  normalizedHeaders: (keyof NormalizedProduct | null)[],
-  originalHeaders: string[]
-): NormalizedProduct {
+export function normalizeCsvRow(row: { [key: string]: string }, normalizedHeaders: (keyof NormalizedProduct | null)[]): NormalizedProduct {
+  const headers = Object.keys(row);
   const normalizedRow: Partial<NormalizedProduct> = { isActive: true };
 
   normalizedHeaders.forEach((mappedHeader, index) => {
     if (mappedHeader) {
-      const originalHeader = originalHeaders[index];
+      const originalHeader = headers[index];
       const value = row[originalHeader]?.trim();
 
       if (mappedHeader === 'priceVnd') {
@@ -82,7 +78,7 @@ export function normalizeCsvRow(
   normalizedRow.stockStatus = inferStockStatus(row);
 
   if (!normalizedRow.name) {
-    normalizedRow.name = 'Unnamed Product';
+    throw new Error('Row is missing a name.');
   }
 
   return normalizedRow as NormalizedProduct;
@@ -115,7 +111,7 @@ export function normalizeCsvData(data: { [key: string]: string }[]): NormalizedP
     if (data.length === 0) {
         return [];
     }
-    const originalHeaders = Object.keys(data[0]);
-    const normalizedHeaders = normalizeHeaders(originalHeaders);
-    return data.map(row => normalizeCsvRow(row, normalizedHeaders, originalHeaders));
+    const headers = Object.keys(data[0]);
+    const normalizedHeaders = normalizeHeaders(headers);
+    return data.map(row => normalizeCsvRow(row, normalizedHeaders));
 }
