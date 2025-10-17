@@ -36,7 +36,7 @@ export function FloatingZaloButton() {
             Chat Zalo để được tư vấn và hỗ trợ mua hàng
           </p>
           <Button
-            variant="zalo"
+            variant="default"
             size="sm"
             className="w-full animate-pulse-zalo"
             asChild
@@ -49,7 +49,7 @@ export function FloatingZaloButton() {
         </div>
       ) : (
         <Button
-          variant="zalo"
+          variant="default"
           size="lg"
           className="rounded-full w-14 h-14 animate-pulse-zalo"
           onClick={() => setIsMinimized(false)}

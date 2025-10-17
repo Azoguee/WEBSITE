@@ -42,7 +42,7 @@ export default function ContactPage() {
                   Cách nhanh nhất để liên hệ với chúng tôi
                 </p>
                 <Button
-                  variant="zalo"
+                  variant="default"
                   size="lg"
                   className="w-full animate-pulse-zalo"
                   asChild
